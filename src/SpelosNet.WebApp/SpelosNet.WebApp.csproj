@@ -1,7 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <ItemGroup>
+    <ProjectReference Include="..\SpelosNet.Core\SpelosNet.Core.csproj" />
+    <ProjectReference Include="..\SpelosNet.Infrastructure\SpelosNet.Infrastructure.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="redirectUrls.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
 </Project>

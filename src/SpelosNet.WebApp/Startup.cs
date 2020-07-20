@@ -9,6 +9,10 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using SpelosNet.Core.Repositories;
+using SpelosNet.Core.Services;
+using SpelosNet.Infrastructure;
+using SpelosNet.Infrastructure.Repositories;
 
 namespace SpelosNet.WebApp
 {
@@ -25,6 +29,10 @@ namespace SpelosNet.WebApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+
+            services.AddSingleton<JsonStorage>();
+            services.AddScoped<IUrlRepository, UrlRepository>();
+            services.AddScoped<IUrlShortener, UrlShortener>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

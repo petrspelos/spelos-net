@@ -1,19 +1,10 @@
-﻿/* * {
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+﻿.spotify-playlist > img {
+    width: 100%;
+    height: auto;
 }
 
-.wrapper {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-gap: 10px;
-    grid-auto-rows: minmax(100px, auto);
+.spotify-playlist > span {
+    display: block;
+    text-align: center;
+    color: #5e5e5e;
 }
-
-.col-left {
-    grid-column: 1;
-    padding: 10px 0 0 20px;
-}
-
-.col-right {
-    grid-column: 2;
-} */

@@ -13,6 +13,7 @@ using SpelosNet.Core.Repositories;
 using SpelosNet.Core.Services;
 using SpelosNet.Infrastructure;
 using SpelosNet.Infrastructure.Repositories;
+using SpelosNet.Infrastructure.Spotify;
 
 namespace SpelosNet.WebApp
 {
@@ -33,6 +34,13 @@ namespace SpelosNet.WebApp
             services.AddSingleton<JsonStorage>();
             services.AddScoped<IUrlRepository, UrlRepository>();
             services.AddScoped<IUrlShortener, UrlShortener>();
+
+            var spotifyClientId = Configuration.GetValue<string>("Spotify:ClientId");
+            var spotifyClientSecret = Configuration.GetValue<string>("Spotify:ClientSecret");
+            var spotifyMyUserId = Configuration.GetValue<string>("Spotify:MyUserId");
+            var spotifyConfig = new SpotifyConfig(spotifyClientId, spotifyClientSecret, spotifyMyUserId);
+            services.AddSingleton<SpotifyApi>(p => new SpotifyApi(spotifyConfig));
+            services.AddTransient<ISpotifyService, SpotifyService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

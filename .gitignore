@@ -435,3 +435,6 @@ $RECYCLE.BIN/
 
 ## Website Resouces
 img/
+
+## Production config
+appsettings.Production.json

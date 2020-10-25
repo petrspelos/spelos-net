@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,13 +11,20 @@ namespace SpelosNet.Infrastructure.Spotify
     {
         private readonly SpotifyApi _api;
 
+        private InMemoryCache<Task<IEnumerable<SpotifyPlaylist>>> _myPlaylists;
+
         public SpotifyService(SpotifyApi api)
         {
             _api = api;
+            _myPlaylists = new InMemoryCache<Task<IEnumerable<SpotifyPlaylist>>>(GetMyPlaylistsFromApiAsync, TimeSpan.FromHours(1));
         }
 
-        public async Task<IEnumerable<SpotifyPlaylist>> GetMyPlaylistsAsync()
+        public async Task<IEnumerable<SpotifyPlaylist>> GetMyPlaylistsAsync() => await _myPlaylists.GetValue();
+
+        private async Task<IEnumerable<SpotifyPlaylist>> GetMyPlaylistsFromApiAsync()
         {
+            await _api.InitializeAsync();
+
             var playlists = await _api.GetMyPlaylists();
 
             return playlists.Select(p => new SpotifyPlaylist

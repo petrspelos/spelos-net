@@ -29,9 +29,6 @@ namespace SpelosNet.Infrastructure.Spotify
 
         public async Task<IEnumerable<SimplePlaylist>> GetMyPlaylists()
         {
-            if(_spotify is null)
-                await InitializeAsync();
-
             var response = await _spotify.GetUserPlaylistsAsync(_config.MyUserId);
             return response.Items;
         }

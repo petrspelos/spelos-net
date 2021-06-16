@@ -1,5 +1,3 @@
-using System;
-
 namespace SpelosNet.WebApp.Models
 {
     public class ErrorViewModel

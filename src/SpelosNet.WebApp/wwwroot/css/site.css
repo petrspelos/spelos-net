@@ -1,4 +1,12 @@
-﻿.spotify-playlist > img {
+﻿body {
+    background-color: #FAF7F4;
+}
+
+h1 {
+    color: #9C2D41;
+}
+
+.spotify-playlist > img {
     width: 100%;
     height: auto;
 }
@@ -7,4 +15,42 @@
     display: block;
     text-align: center;
     color: #5e5e5e;
+}
+
+.avatar {
+    border-radius: 50%;
+    box-shadow: 2px 2px 5px -2px black;
+}
+
+.emoji {
+    vertical-align:middle;
+}
+
+.primary {
+    background-color: #df7e00;
+}
+
+.secondary {
+    background-color: #7F4AA4;
+}
+
+.bio {
+    margin: 3em 2em 0 2em;
+}
+
+.avatar-container {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+}
+
+.bio-container {
+    align-content: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.big-gap {
+    margin: 3em 0 3em 0;
 }

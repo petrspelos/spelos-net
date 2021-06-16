@@ -1,63 +1,63 @@
 ﻿<div class="container">
 
   <div class="row">
-    <div class="column">
+    <div class="col-sm">
 
-        <h1>Welcome to Spelos.NET</h1>
-        <p>Hello, my name is Peter. To learn more about me, checkout my <a href="https://github.com/petrspelos">GitHub</a> profile.</p>
-        <p>I also have a couple of public <a asp-controller="Spotify" asp-action="Index">Spotify playlists</a>.</p>
+        <div class="container bio">
+            <div class="row">
+                <div class="col-md-2 avatar-container">
+                    <img src="~/img/avatar.webp" class="avatar" width="200" height="200" alt="Author's profile picture" />
+                </div>
+                <div class="col-md bio-container">
+                    <p>Hello, my name is Peter! <img src="~/img/emoji-relaxed.webp" class="emoji" width="20" height="20" alt="Relaxed face emoji" /></p>
+                    <p>I'm a <mark class="primary">software engineer</mark> with a focus on <mark class="secondary">.NET</mark> and I like <mark class="tertiary">making online tutorials</mark> about programming.</p>
+                </div>
+            </div>
+        </div>
+        
+        <hr class="big-gap" />
 
-    </div>
-    <div class="column">
-
-        <h2>Some of my projects</h2>
-
-        <table>
+        <table style="max-height: none;">
             <thead>
                 <tr>
-                    <th>Project</th>
-                    <th>Technology</th>
-                    <th>Link</th>
+                    <th>Get in touch</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>YouTube tutorials</td>
                     <td>
-                        <img height="24" width="24" src="https://unpkg.com/simple-icons@v3/icons/obsstudio.svg" title="Open Broadcaster Software" />
+                        <p style="margin-top: 10px"><img src="~/img/logo-matrix.webp" class="emoji" width="50" height="50" style="margin-right: 20px;"/> DM me on Matrix</p>
                     </td>
                     <td>
-                        <a href="https://spelos.net/youtube">
-                            <img src="https://img.shields.io/badge/YouTube-Peter-red?style=for-the-badge&logo=youtube" alt="GitHub project link">
-                        </a>
+                        <a class="primary button" style="background-color: #0dbd8b;" href="/contact">Add me on Matrix</a>
                     </td>
                 </tr>
                 <tr>
-                    <td>Theme me up</td>
                     <td>
-                        <img height="24" width="24" src="https://unpkg.com/simple-icons@v3/icons/csharp.svg" title="C#" />
-                        <img height="24" width="24" src="https://unpkg.com/simple-icons@v3/icons/dot-net.svg" title=".NET" />
+                        <p style="margin-top: 10px"><img src="~/img/logo-matrix.webp" class="emoji" width="50" height="50" style="margin-right: 20px;"/> Programming group chat on Matrix</p>
                     </td>
                     <td>
-                        <a href="https://github.com/petrspelos/theme-me-up">
-                            <img src="https://img.shields.io/badge/GitHub-project-blue?style=for-the-badge&logo=github" alt="GitHub project link">
-                        </a>
+                        <a class="primary button" style="background-color: #0dbd8b;" href="/chat">Join Matrix group</a>
                     </td>
                 </tr>
                 <tr>
-                    <td><i>... and many more</i></td>
                     <td>
+                        <p style="margin-top: 10px"><img src="~/img/logo-github.webp" class="emoji" width="50" height="50" style="margin-right: 20px;"/> Follow me on GitHub</p>
                     </td>
                     <td>
-                        <a href="https://spelos.net/github">
-                            <img src="https://img.shields.io/badge/GitHub-profile-black?style=for-the-badge&logo=github" alt="GitHub profile link">
-                        </a>
+                        <a class="primary button" style="background-color: #333333;" href="/github">Go to GitHub</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p style="margin-top: 10px"><img src="~/img/logo-odysee.webp" class="emoji" width="50" height="50" style="margin-right: 20px;"/> Watch my programming tutorials</p>
+                    </td>
+                    <td>
+                        <a class="primary button" style="background-color: #f56543;" href="/contact">Go to Odysee</a>
                     </td>
                 </tr>
             </tbody>
         </table>
-
     </div>
-  </div>
-
 </div>

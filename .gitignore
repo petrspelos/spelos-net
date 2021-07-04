@@ -438,3 +438,6 @@ img/
 
 ## Production config
 appsettings.Production.json
+
+## Deployment
+deploy/

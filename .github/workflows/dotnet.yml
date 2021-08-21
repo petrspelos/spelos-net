@@ -1,11 +1,11 @@
-name: .NET
+name: .NET Deployment
 
 on:
   push:
     branches: [ master ]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:

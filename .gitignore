@@ -433,9 +433,6 @@ $RECYCLE.BIN/
 !.vscode/extensions.json
 .vscode/
 
-## Website Resouces
-img/
-
 ## Production config
 appsettings.Production.json
 

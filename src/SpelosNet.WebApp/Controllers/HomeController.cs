@@ -1,20 +1,17 @@
-﻿using System.Diagnostics;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Mvc;
 using SpelosNet.Core.Services;
 using SpelosNet.WebApp.Models;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace SpelosNet.WebApp.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
         private readonly IUrlShortener _urlShortener;
 
-        public HomeController(ILogger<HomeController> logger, IUrlShortener urlShortener)
+        public HomeController(IUrlShortener urlShortener)
         {
-            _logger = logger;
             _urlShortener = urlShortener;
         }
 

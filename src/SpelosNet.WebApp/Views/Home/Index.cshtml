@@ -1,71 +1,17 @@
-﻿<div class="container">
-
-    <div class="row">
-        <div class="col-sm">
-
-            <div class="container bio">
-                <div class="row">
-                    <div class="col-md-2 avatar-container">
-                        <img src="~/img/avatar.webp" class="avatar" width="200" height="200" alt="Author's profile picture" />
-                    </div>
-                    <div class="col-md bio-container">
-                        <p>Hello, my name is Peter! <img src="~/img/emoji-relaxed.webp" class="emoji" width="20" height="20" alt="Relaxed face emoji" /></p>
-                        <p>I'm a <mark class="primary">software engineer</mark> with a focus on <mark class="secondary">.NET</mark> and I like <mark class="tertiary">making online tutorials</mark> about programming.</p>
-                    </div>
-                </div>
-            </div>
-
-            <hr class="big-gap" />
-
-            <table style="max-height: none;">
-                <thead>
-                    <tr>
-                        <th>Get in touch</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>
-                            <p style="margin-top: 10px"><img src="~/img/logo-matrix.webp" class="emoji" width="50" height="50" style="margin-right: 20px;" /> DM me on Matrix</p>
-                        </td>
-                        <td>
-                            <a class="primary button" style="background-color: #0dbd8b;" href="/contact">Add me on Matrix</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <p style="margin-top: 10px"><img src="~/img/logo-matrix.webp" class="emoji" width="50" height="50" style="margin-right: 20px;" /> Programming group chat on Matrix</p>
-                        </td>
-                        <td>
-                            <a class="primary button" style="background-color: #0dbd8b;" href="/chat">Join Matrix group</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <p style="margin-top: 10px"><img src="~/img/logo-github.webp" class="emoji" width="50" height="50" style="margin-right: 20px;" /> Follow me on GitHub</p>
-                        </td>
-                        <td>
-                            <a class="primary button" style="background-color: #333333;" href="/github">Go to GitHub</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <p style="margin-top: 10px"><img src="~/img/logo-odysee.webp" class="emoji" width="50" height="50" style="margin-right: 20px;" /> Watch my programming tutorials</p>
-                        </td>
-                        <td>
-                            <a class="primary button" style="background-color: #f56543;" href="/videos">Go to Odysee</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <p style="margin-top: 10px"><img src="~/img/logo-glimesh.webp" class="emoji" width="50" height="50" style="margin-right: 20px;" /> Watch my livestreams</p>
-                        </td>
-                        <td>
-                            <a class="primary button" style="background-color: #2e47c4;" href="/live">Go to Glimesh</a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+﻿<div class="workspace">
+    <img src="~/img/avatar.webp" class="avatar" width="200" height="200" alt="Spelos' profile picture" />
+    <pre>
+<span class="token-keyword">new</span> <span class="token-class">Programmer</span>()
+{
+    Name = <span class="token-literal">"Peter"</span>,
+    FavoriteLanguage = <span class="token-enum">Language</span>.CSharp,
+    Links = <span class="token-keyword">new</span> [] {
+        <a href="/contact" target="_blank" class="token-signature"><img src="~/img/logo-matrix.webp" alt="Matrix.org logo" class="emoji" />Matrix DMs</a>,
+        <a href="/chat" target="_blank" class="token-signature"><img src="~/img/logo-matrix.webp" alt="Matrix.org logo" class="emoji" />Community group chat</a>,
+        <a href="/github" target="_blank" class="token-signature"><img src="~/img/logo-github.webp" alt="Github.com logo" class="emoji" />GitHub</a>,
+        <a href="/videos" target="_blank" class="token-signature"><img src="~/img/logo-odysee.webp" alt="Odysee.com logo" class="emoji" />Odysee</a>,
+        <a href="/live" target="_blank" class="token-signature"><img src="~/img/logo-glimesh.webp" alt="Glimesh.tv logo" class="emoji" />Glimesh.tv</a>
+    }
+};
+    </pre>
+</div>

@@ -17,4 +17,8 @@
 		<None Update="docs-pages.json" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="wwwroot\fonts\" />
+	</ItemGroup>
+
 </Project>

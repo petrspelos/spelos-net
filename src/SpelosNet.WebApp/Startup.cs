@@ -8,7 +8,6 @@ using SpelosNet.Core.Repositories;
 using SpelosNet.Core.Services;
 using SpelosNet.Infrastructure;
 using SpelosNet.Infrastructure.Repositories;
-using SpelosNet.Infrastructure.Spotify;
 using System;
 
 namespace SpelosNet.WebApp
@@ -22,7 +21,6 @@ namespace SpelosNet.WebApp
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
@@ -33,16 +31,8 @@ namespace SpelosNet.WebApp
 
             services.AddSingleton<IDailyDotnetService, DailyDotnetService>();
             services.AddSingleton<Random>();
-
-            var spotifyClientId = Configuration.GetValue<string>("Spotify:ClientId");
-            var spotifyClientSecret = Configuration.GetValue<string>("Spotify:ClientSecret");
-            var spotifyMyUserId = Configuration.GetValue<string>("Spotify:MyUserId");
-            var spotifyConfig = new SpotifyConfig(spotifyClientId, spotifyClientSecret, spotifyMyUserId);
-            services.AddSingleton<SpotifyApi>(p => new SpotifyApi(spotifyConfig));
-            services.AddTransient<ISpotifyService, SpotifyService>();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseForwardedHeaders(new ForwardedHeadersOptions
@@ -57,7 +47,6 @@ namespace SpelosNet.WebApp
             else
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 

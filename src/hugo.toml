@@ -1,0 +1,7 @@
+baseURL = 'https://spelos.net/'
+languageCode = 'en-us'
+title = 'Spelos .NET'
+
+[caches]
+  [caches.images]
+    dir = ':cacheDir/images'

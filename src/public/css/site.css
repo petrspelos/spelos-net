@@ -1,0 +1,84 @@
+﻿@font-face {
+    font-family: CaskaydiaCove;
+    src: url('../fonts/Caskaydia Cove Nerd Font Complete.ttf');
+}
+
+body {
+    background-image: url('../img/bg.webp');
+    margin: 0;
+    font-family: 'CaskaydiaCove';
+    color: white;
+}
+
+.avatar {
+    border-radius: 50%;
+    box-shadow: 0px 0px 15px 0px #8b1982;
+    margin: 20px;
+}
+
+.workspace {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    flex-direction: column;
+}
+
+@media screen and (min-width: 800px) {
+    .workspace {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        flex-direction: row;
+    }
+}
+
+.emoji {
+    vertical-align: middle;
+    width: 40px;
+    height: 40px;
+    padding: 5px;
+    margin-right: 8px;
+}
+
+.token-class {
+    color: #4EC9B0;
+}
+
+.token-keyword {
+    color: #5198D6;
+}
+
+.token-literal {
+    color: #D69D85;
+}
+
+.token-enum {
+    color: #B8D7A3;
+}
+
+.token-signature {
+    color: #9CDCFC;
+}
+
+    .token-signature:hover {
+        color: #569CD6;
+    }
+
+.token-comment {
+    color: #57A649;
+}
+
+pre {
+    font-family: 'CaskaydiaCove';
+    color: white;
+}
+
+.post-wrapper {
+    margin: 2.5em;
+}
+
+a {
+    color: #5198D6;
+}

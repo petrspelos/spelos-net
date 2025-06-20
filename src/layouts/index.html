@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }}</title>
+    <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body>
+    <div class="workspace">
+        <img src="img/avatar.webp" class="avatar" width="200" height="200" alt="Spelos' profile picture" />
+        <pre>
+<span class="token-keyword">new</span> <span class="token-class">Programmer</span>()
+{
+    Name = <span class="token-literal">"Peter"</span>,
+    FavoriteLanguage = <span class="token-enum">Language</span>.CSharp,
+    Links = <span class="token-keyword">new</span> [] {
+        <a href="https://matrix.to/#/@shirline:matrix.org" target="_blank" class="token-signature"><img src="img/logo-matrix.webp" alt="Matrix.org logo" class="emoji" />Matrix DMs</a>,
+        <a href="https://matrix.to/#/!BKIQmmzroSxqmCgHjj:matrix.org?via=matrix.org" target="_blank" class="token-signature"><img src="img/logo-matrix.webp" alt="Matrix.org logo" class="emoji" />Community group chat</a>,
+        <a href="https://github.com/petrspelos" target="_blank" class="token-signature"><img src="img/logo-github.webp" alt="Github.com logo" class="emoji" />GitHub</a>,
+        <a href="https://odysee.com/@peter:c" target="_blank" class="token-signature"><img src="img/logo-odysee.webp" alt="Odysee.com logo" class="emoji" />Odysee</a>,
+        <a href="https://glimesh.tv/spelos/" target="_blank" class="token-signature"><img src="img/logo-glimesh.webp" alt="Glimesh.tv logo" class="emoji" />Glimesh.tv</a>
+    },
+    Posts = <span class="token-keyword">new</span> [] {
+        {{ range where .Site.RegularPages "Section" "posts" }}
+            <a  class="token-signature" href="{{ .RelPermalink }}">{{ .Title }}</a>
+        {{ end }}
+    }
+};
+    </pre>
+    </div>
+
+</body>
+</html>

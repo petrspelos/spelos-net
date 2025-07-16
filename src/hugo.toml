@@ -1,6 +1,7 @@
 baseURL = 'https://spelos.net/'
 languageCode = 'en-us'
 title = 'Spelos .NET'
+disableKinds = ["taxonomy", "section"]
 
 [caches]
   [caches.images]

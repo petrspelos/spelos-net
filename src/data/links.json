@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Matrix DMs",
+    "url": "https://matrix.to/#/@shirline:matrix.org",
+    "icon": "img/logo-matrix.webp"
+  },
+  {
+    "name": "Community group chat",
+    "url": "https://matrix.to/#/!BKIQmmzroSxqmCgHjj:matrix.org?via=matrix.org",
+    "icon": "img/logo-matrix.webp"
+  },
+  {
+    "name": "Community group chat (proprietary)",
+    "url": "https://discord.gg/Z7dbRen8bR",
+    "icon": "img/logo-discord.webp"
+  },
+  {
+    "name": "GitHub",
+    "url": "https://github.com/petrspelos",
+    "icon": "img/logo-github.webp"
+  },
+  {
+    "name": "Odysee",
+    "url": "https://odysee.com/@peter:c",
+    "icon": "img/logo-odysee.webp"
+  },
+  {
+    "name": "YouTube",
+    "url": "https://www.youtube.com/@Peter-vt1sx",
+    "icon": "img/logo-youtube.webp"
+  },
+  {
+    "name": "Ko-fi",
+    "url": "https://ko-fi.com/spelos",
+    "icon": "img/logo-kofi.webp"
+  },
+  {
+    "name": "Keybase",
+    "url": "https://keybase.io/spelos",
+    "icon": "img/logo-keybase.webp"
+  },
+  {
+    "name": "Twitch",
+    "url": "https://www.twitch.tv/spelos",
+    "icon": "img/logo-twitch.webp"
+  }
+]

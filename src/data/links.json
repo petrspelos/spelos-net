@@ -5,12 +5,7 @@
     "icon": "img/logo-matrix.webp"
   },
   {
-    "name": "Community group chat",
-    "url": "https://matrix.to/#/!BKIQmmzroSxqmCgHjj:matrix.org?via=matrix.org",
-    "icon": "img/logo-matrix.webp"
-  },
-  {
-    "name": "Community group chat (proprietary)",
+    "name": "Community Discord",
     "url": "https://discord.gg/Z7dbRen8bR",
     "icon": "img/logo-discord.webp"
   },
@@ -25,8 +20,13 @@
     "icon": "img/logo-odysee.webp"
   },
   {
-    "name": "YouTube",
+    "name": ".NET YouTube",
     "url": "https://www.youtube.com/@Peter-vt1sx",
+    "icon": "img/logo-youtube.webp"
+  },
+  {
+    "name": "Gaming YouTube",
+    "url": "https://www.youtube.com/@Peter-lc7nw",
     "icon": "img/logo-youtube.webp"
   },
   {

@@ -18,7 +18,7 @@
         {{ range .Site.Data.links }}<a href="{{ .url }}" target="_blank" class="token-signature"><img src="{{ .icon }}" alt="website logo" class="emoji" />{{ .name }}</a>,
         {{ end }}
     },
-    Posts = <span class="token-keyword">new</span> [] {
+    Projects = <span class="token-keyword">new</span> [] {
         {{ range where .Site.RegularPages "Section" "posts" }}
             <a  class="token-signature" href="{{ .RelPermalink }}">{{ .Title }}</a>
         {{ end }}

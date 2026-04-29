@@ -1,15 +1,5 @@
 [
   {
-    "name": "Matrix DMs",
-    "url": "https://matrix.to/#/@shirline:matrix.org",
-    "icon": "img/logo-matrix.webp"
-  },
-  {
-    "name": "Community Discord",
-    "url": "https://discord.gg/Z7dbRen8bR",
-    "icon": "img/logo-discord.webp"
-  },
-  {
     "name": "GitHub",
     "url": "https://github.com/petrspelos",
     "icon": "img/logo-github.webp"
@@ -20,24 +10,9 @@
     "icon": "img/logo-odysee.webp"
   },
   {
-    "name": ".NET YouTube",
+    "name": "YouTube",
     "url": "https://www.youtube.com/@Peter-vt1sx",
     "icon": "img/logo-youtube.webp"
-  },
-  {
-    "name": "Gaming YouTube",
-    "url": "https://www.youtube.com/@Peter-lc7nw",
-    "icon": "img/logo-youtube.webp"
-  },
-  {
-    "name": "Ko-fi",
-    "url": "https://ko-fi.com/spelos",
-    "icon": "img/logo-kofi.webp"
-  },
-  {
-    "name": "Keybase",
-    "url": "https://keybase.io/spelos",
-    "icon": "img/logo-keybase.webp"
   },
   {
     "name": "Twitch",

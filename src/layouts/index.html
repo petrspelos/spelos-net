@@ -14,10 +14,10 @@
 {
     Name = <span class="token-literal">"Peter"</span>,
     FavoriteLanguage = <span class="token-enum">Language</span>.CSharp,
-    Links = <span class="token-keyword">new</span> [] {
+    Links = [
         {{ range .Site.Data.links }}<a href="{{ .url }}" target="_blank" class="token-signature"><img src="{{ .icon }}" alt="website logo" class="emoji" />{{ .name }}</a>,
         {{ end }}
-    }
+    ]
 };
     </pre>
     </div>

@@ -5,18 +5,8 @@
     "icon": "img/logo-github.webp"
   },
   {
-    "name": "Odysee",
-    "url": "https://odysee.com/@peter:c",
-    "icon": "img/logo-odysee.webp"
-  },
-  {
     "name": "YouTube",
-    "url": "https://www.youtube.com/@Peter-vt1sx",
+    "url": "https://www.youtube.com/@PeterSpelos",
     "icon": "img/logo-youtube.webp"
-  },
-  {
-    "name": "Twitch",
-    "url": "https://www.twitch.tv/spelos",
-    "icon": "img/logo-twitch.webp"
   }
 ]

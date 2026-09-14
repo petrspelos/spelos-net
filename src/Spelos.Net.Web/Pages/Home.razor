@@ -1,0 +1,62 @@
+@page "/"
+@using System.Text.Json
+@using Spelos.Net.Web.Content
+@inject ILinkCatalog LinkCatalog
+
+<PageTitle>Spelos .NET</PageTitle>
+
+<main class="home-shell">
+    <h1 class="visually-hidden">Peter Spelos</h1>
+    <img src="img/avatar.webp" class="avatar" width="200" height="200" alt="Peter Spelos" />
+    <div class="code-card" aria-label="Peter's programmer profile">
+        <div><span class="token-keyword">new</span> <span class="token-class">Programmer</span>()</div>
+        <div>{</div>
+        <div class="indent">Name = <span class="token-literal">"Peter"</span>,</div>
+        <div class="indent">FavoriteLanguage = <span class="token-enum">Language</span>.CSharp,</div>
+        <div class="indent">Links = [</div>
+        @if (_state is LinkLoadState.Loading)
+        {
+            <div class="double-indent status" role="status">// Loading links…</div>
+        }
+        else if (_state is LinkLoadState.Failed)
+        {
+            <div class="double-indent token-comment" role="alert">// Links are temporarily unavailable.</div>
+        }
+        else
+        {
+            @foreach (var link in _links)
+            {
+                <div class="double-indent">
+                    <a href="@link.Destination" class="token-signature profile-link"
+                       target="@(link.Kind is LinkKind.External ? "_blank" : null)"
+                       rel="@(link.Kind is LinkKind.External ? "noopener noreferrer" : null)"
+                       aria-label="@(link.Kind is LinkKind.External ? $"{link.Name} (opens in a new tab)" : link.Name)">
+                        <img src="@link.IconPath" alt="" class="link-icon" />@link.Name
+                    </a>,
+                </div>
+            }
+        }
+        <div class="indent">]</div>
+        <div>};</div>
+    </div>
+</main>
+
+@code {
+    private IReadOnlyList<SiteLink> _links = [];
+    private LinkLoadState _state = LinkLoadState.Loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _links = await LinkCatalog.GetLinksAsync();
+            _state = LinkLoadState.Loaded;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or JsonException or InvalidDataException)
+        {
+            _state = LinkLoadState.Failed;
+        }
+    }
+
+    private enum LinkLoadState { Loading, Loaded, Failed }
+}

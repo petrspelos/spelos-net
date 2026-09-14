@@ -62,6 +62,21 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
     }
 
     [Fact]
+    public async Task Background_uses_intrinsic_image_size_and_tiles_in_both_directions()
+    {
+        await Page.GotoAsync(site.BaseUrl);
+        await ExpectApplicationAsync(Page.GetByLabel("Peter's programmer profile"));
+
+        var backgroundSize = await Page.Locator("html").EvaluateAsync<string>(
+            "element => getComputedStyle(element).backgroundSize");
+        var backgroundRepeat = await Page.Locator("html").EvaluateAsync<string>(
+            "element => getComputedStyle(element).backgroundRepeat");
+
+        Assert.Equal("auto", backgroundSize);
+        Assert.Equal("repeat", backgroundRepeat);
+    }
+
+    [Fact]
     public async Task Unknown_route_uses_branded_accessible_not_found_view()
     {
         await Page.GotoAsync($"{site.BaseUrl}/missing-page");

@@ -52,6 +52,12 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
     [Fact]
     public async Task Discord_timestamp_tool_is_discoverable_and_survives_direct_refresh()
     {
+        await Page.AddInitScriptAsync("""
+            const resolvedOptions = Intl.DateTimeFormat.prototype.resolvedOptions;
+            Intl.DateTimeFormat.prototype.resolvedOptions = function () {
+                return { ...resolvedOptions.call(this), timeZone: "UTC" };
+            };
+            """);
         await Page.GotoAsync($"{site.BaseUrl}/tools");
         await Page.GetByRole(AriaRole.Link, new() { Name = "Discord Timestamp Generator" }).ClickAsync();
         await ExpectApplicationAsync(Page.GetByRole(AriaRole.Heading, new() { Name = "Discord Timestamp Generator" }));
@@ -59,7 +65,7 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
 
         await ExpectApplicationAsync(Page.GetByText("Generated Markdown", new() { Exact = true }));
         await Expect(Page.Locator("#discord-generated-output")).ToContainTextAsync(new Regex("^<t:-?\\d+:f>"));
-        await Expect(Page.Locator(".live-reference span")).ToContainTextAsync(new Regex("Local time|.+/.+"));
+        await Expect(Page.Locator(".live-reference span")).ToHaveTextAsync("UTC");
         await Page.EvaluateAsync("window.compareToggleCount = 0; document.querySelector('details.compare').addEventListener('toggle', () => window.compareToggleCount++)");
         await Page.GetByText("Compare all formats", new() { Exact = true }).ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Short time") }).ClickAsync();

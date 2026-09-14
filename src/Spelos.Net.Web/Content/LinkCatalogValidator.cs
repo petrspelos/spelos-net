@@ -21,8 +21,16 @@ public static class LinkCatalogValidator
             if (link.Kind is LinkKind.Internal && (!link.Destination.StartsWith('/') || link.Destination.StartsWith("//", StringComparison.Ordinal)))
                 errors.Add($"{link.Name}: internal destinations must be root-relative paths.");
             if (string.IsNullOrWhiteSpace(link.IconPath)) errors.Add($"{link.Name}: an icon path is required.");
+            else if (!IsSafeIconPath(link.IconPath)) errors.Add($"{link.Name}: icon paths must remain beneath wwwroot/img.");
             else if (!iconExists(link.IconPath)) errors.Add($"{link.Name}: icon '{link.IconPath}' does not exist.");
         }
         return errors;
     }
+
+    private static bool IsSafeIconPath(string path) =>
+        path.StartsWith("img/", StringComparison.Ordinal) &&
+        !path.Contains('\\') &&
+        !path.Contains('?') &&
+        !path.Contains('#') &&
+        path.Split('/').All(segment => segment is not "" and not "." and not "..");
 }

@@ -13,7 +13,7 @@ public sealed class PublishedContentTests
         var links = await LinkCatalogJson.DeserializeAsync(stream);
 
         Assert.NotEmpty(links);
-        var errors = LinkCatalogValidator.Validate(links, path => File.Exists(Path.Combine(webRoot.FullName, path)));
+        var errors = LinkCatalogValidator.Validate(links, path => IconExistsWithin(webRoot, path));
         Assert.Empty(errors);
     }
 
@@ -22,5 +22,12 @@ public sealed class PublishedContentTests
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
             if (File.Exists(Path.Combine(directory.FullName, "Spelos.Net.slnx"))) return directory;
         throw new DirectoryNotFoundException("Could not find the repository root.");
+    }
+
+    private static bool IconExistsWithin(DirectoryInfo webRoot, string path)
+    {
+        var candidate = Path.GetFullPath(Path.Combine(webRoot.FullName, path));
+        return candidate.StartsWith(webRoot.FullName + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+            File.Exists(candidate);
     }
 }

@@ -24,6 +24,8 @@ public sealed class LinkCatalogValidatorTests
             new SiteLink("GitHub", "http://github.com/petrspelos", "img/missing.webp", LinkKind.External),
             new SiteLink("GitHub", "tools", "img/missing.webp", LinkKind.Internal),
             new SiteLink("Mystery", "/mystery", "img/missing.webp", (LinkKind)99),
+            new SiteLink("Escape", "/escape", "../secret.txt", LinkKind.Internal),
+            new SiteLink("Remote", "/remote", "https://example.com/icon.svg", LinkKind.Internal),
         };
 
         var errors = LinkCatalogValidator.Validate(links, _ => false);
@@ -33,6 +35,7 @@ public sealed class LinkCatalogValidatorTests
         Assert.Contains(errors, error => error.Contains("Duplicate name", StringComparison.Ordinal));
         Assert.Contains(errors, error => error.Contains("does not exist", StringComparison.Ordinal));
         Assert.Contains(errors, error => error.Contains("unknown kind", StringComparison.Ordinal));
+        Assert.Equal(2, errors.Count(error => error.Contains("beneath wwwroot", StringComparison.Ordinal)));
     }
 
     [Fact]

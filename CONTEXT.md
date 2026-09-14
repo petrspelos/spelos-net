@@ -23,3 +23,15 @@ _Avoid_: Widget, app
 **Tools page**:
 The discoverable catalog for tools at `/tools`, including tools added in the future.
 _Avoid_: Widgets page, utilities page
+
+**Discord timestamp**:
+A Discord markup token containing a Unix instant and display format, rendered in each viewer's local time zone.
+_Avoid_: Discord time code, epoch code
+
+**Time-zone note**:
+Optional quoted Markdown copied beneath a Discord timestamp to explain that Discord displays it in each viewer's local time zone.
+_Avoid_: Disclaimer, warning
+
+**Browser preview**:
+A localized approximation of how Discord will render a Discord timestamp; the generated Discord timestamp remains authoritative.
+_Avoid_: Discord preview, exact preview

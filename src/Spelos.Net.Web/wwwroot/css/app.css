@@ -1,5 +1,5 @@
 @font-face { font-family: "Caskaydia Cove"; src: url("../fonts/caskaydia-cove.woff2") format("woff2"); font-display: swap; }
-:root { color-scheme: dark; font-family: "Caskaydia Cove", "Cascadia Code", Consolas, monospace; color: #fff; background: #0d1117 url("../img/bg.webp") center / cover fixed; }
+:root { color-scheme: dark; font-family: "Caskaydia Cove", "Cascadia Code", Consolas, monospace; color: #fff; background-color: #0d1117; background-image: url("../img/bg.webp"); background-repeat: repeat; background-size: auto; background-attachment: fixed; }
 * { box-sizing: border-box; }
 html, body, #app { min-height: 100%; }
 body { margin: 0; }

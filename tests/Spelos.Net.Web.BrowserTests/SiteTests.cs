@@ -1,16 +1,29 @@
 using Deque.AxeCore.Playwright;
 using Microsoft.Playwright;
 using Microsoft.Playwright.Xunit;
+using Xunit.Sdk;
 
 namespace Spelos.Net.Web.BrowserTests;
 
 public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixture<PublishedSiteFixture>
 {
+    private readonly List<string> _browserErrors = [];
+
+    public override async Task InitializeAsync()
+    {
+        await base.InitializeAsync();
+        Page.PageError += (_, error) => _browserErrors.Add($"Page error: {error}");
+        Page.Console += (_, message) =>
+        {
+            if (message.Type == "error") _browserErrors.Add($"Console error: {message.Text}");
+        };
+    }
+
     [Fact]
     public async Task Home_exposes_external_and_internal_links_without_accessibility_violations()
     {
         await Page.GotoAsync(site.BaseUrl);
-        await Expect(Page.GetByLabel("Peter's programmer profile")).ToBeVisibleAsync();
+        await ExpectApplicationAsync(Page.GetByLabel("Peter's programmer profile"));
         await Expect(Page.GetByRole(AriaRole.Link, new() { Name = "Tools" })).ToHaveAttributeAsync("href", "/tools");
         await Expect(Page.GetByRole(AriaRole.Link, new() { Name = "GitHub (opens in a new tab)" })).ToHaveAttributeAsync("target", "_blank");
 
@@ -25,7 +38,7 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
     public async Task Tools_route_survives_refresh_and_links_home()
     {
         await Page.GotoAsync($"{site.BaseUrl}/tools");
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Tools" })).ToBeVisibleAsync();
+        await ExpectApplicationAsync(Page.GetByRole(AriaRole.Heading, new() { Name = "Tools" }));
         await Page.ReloadAsync();
         await Expect(Page.GetByRole(AriaRole.Link, new() { Name = "Back to home" })).ToHaveAttributeAsync("href", "/");
         Assert.Empty((await Page.RunAxe()).Violations);
@@ -48,7 +61,19 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
     public async Task Unknown_route_uses_branded_accessible_not_found_view()
     {
         await Page.GotoAsync($"{site.BaseUrl}/missing-page");
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Page not found" })).ToBeVisibleAsync();
+        await ExpectApplicationAsync(Page.GetByRole(AriaRole.Heading, new() { Name = "Page not found" }));
         Assert.Empty((await Page.RunAxe()).Violations);
+    }
+
+    private async Task ExpectApplicationAsync(ILocator locator)
+    {
+        try
+        {
+            await Expect(locator).ToBeVisibleAsync();
+        }
+        catch (PlaywrightException exception)
+        {
+            throw new XunitException($"{exception.Message}{Environment.NewLine}{string.Join(Environment.NewLine, _browserErrors)}");
+        }
     }
 }

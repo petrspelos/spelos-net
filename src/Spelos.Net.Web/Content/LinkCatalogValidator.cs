@@ -10,6 +10,8 @@ public static class LinkCatalogValidator
 
         foreach (var link in links)
         {
+            if (!Enum.IsDefined(link.Kind) || link.Kind is LinkKind.Unspecified)
+                errors.Add($"{link.Name}: unknown kind '{link.Kind}'.");
             if (string.IsNullOrWhiteSpace(link.Name)) errors.Add("A link name is required.");
             else if (!names.Add(link.Name)) errors.Add($"Duplicate name: {link.Name}.");
             if (string.IsNullOrWhiteSpace(link.Destination)) errors.Add($"{link.Name}: a destination is required.");

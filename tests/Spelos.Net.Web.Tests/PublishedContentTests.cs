@@ -1,5 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Spelos.Net.Web.Content;
 
 namespace Spelos.Net.Web.Tests;
@@ -11,13 +9,9 @@ public sealed class PublishedContentTests
     {
         var webRoot = FindRepositoryRoot().GetDirectories("Spelos.Net.Web", SearchOption.AllDirectories)
             .Single(directory => directory.Parent?.Name == "src").GetDirectories("wwwroot").Single();
-        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-        options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-
         await using var stream = File.OpenRead(Path.Combine(webRoot.FullName, "data", "links.json"));
-        var links = await JsonSerializer.DeserializeAsync<SiteLink[]>(stream, options);
+        var links = await LinkCatalogJson.DeserializeAsync(stream);
 
-        Assert.NotNull(links);
         Assert.NotEmpty(links);
         var errors = LinkCatalogValidator.Validate(links, path => File.Exists(Path.Combine(webRoot.FullName, path)));
         Assert.Empty(errors);

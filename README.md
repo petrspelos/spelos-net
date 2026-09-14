@@ -28,14 +28,8 @@ The test suite rejects missing fields, unsafe destinations, duplicate names or d
 ```powershell
 dotnet test tests/Spelos.Net.Web.Tests
 dotnet build tests/Spelos.Net.Web.BrowserTests -c Release
+dotnet publish src/Spelos.Net.Web -c Release
 pwsh tests/Spelos.Net.Web.BrowserTests/bin/Release/net10.0/playwright.ps1 install chromium
-dotnet run --project src/Spelos.Net.Web -c Release --no-build --urls http://127.0.0.1:5080
-```
-
-With the site running, execute the browser tests in another terminal:
-
-```powershell
-$env:SPELOS_BASE_URL = 'http://127.0.0.1:5080'
 dotnet test tests/Spelos.Net.Web.BrowserTests -c Release --no-build
 ```
 

@@ -60,9 +60,13 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
         await ExpectApplicationAsync(Page.GetByText("Generated Markdown", new() { Exact = true }));
         await Expect(Page.Locator("#discord-generated-output")).ToContainTextAsync(new Regex("^<t:-?\\d+:f>"));
         await Expect(Page.Locator(".live-reference span")).ToContainTextAsync(new Regex("Local time|.+/.+"));
+        await Page.EvaluateAsync("window.compareToggleCount = 0; document.querySelector('details.compare').addEventListener('toggle', () => window.compareToggleCount++)");
         await Page.GetByText("Compare all formats", new() { Exact = true }).ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Short time") }).ClickAsync();
         await Expect(Page.Locator("#discord-generated-output")).ToBeFocusedAsync();
+        await Expect(Page.Locator("details.compare")).Not.ToHaveAttributeAsync("open", "", new() { Timeout = 2000 });
+        await Page.WaitForTimeoutAsync(500);
+        Assert.InRange(await Page.EvaluateAsync<int>("window.compareToggleCount"), 1, 2);
         Assert.Empty((await Page.RunAxe()).Violations);
     }
 

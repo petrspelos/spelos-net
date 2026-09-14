@@ -30,7 +30,7 @@
             @foreach (var item in FormatItems) { <option value="@item.Code">@item.Label (@item.Code)</option> }
         </select></label>
 
-        <details class="compare" open="@_compareOpen" @ontoggle="ComparisonToggled"><summary>Compare all formats</summary>
+        <details class="compare"><summary>Compare all formats</summary>
             <div class="comparison-list">@foreach (var item in FormatItems) { <button type="button" @onclick="() => SelectComparison(item.Style)"><strong>@item.Label</strong><span>Browser preview: @ComparisonPreview(item.Code)</span><code>@DiscordTimestampEngine.Markup(_resolution.UnixSeconds, item.Style)</code></button> }</div>
         </details>
 
@@ -87,7 +87,7 @@
     private string _status = "";
     private DiscordTimestampStyle _style = DiscordTimestampStyle.LongDateShortTime;
     private LocalTimeResolution _resolution = new(null, Error: "Loading local time…");
-    private bool _includeNote, _laterOccurrence, _copied, _compareOpen;
+    private bool _includeNote, _laterOccurrence, _copied;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -130,8 +130,7 @@
     private async Task SetOccurrence(bool later) { _laterOccurrence = later; await RefreshAsync(); }
     private async Task ChangeStyle(ChangeEventArgs e) { _style = ParseStyle(e.Value?.ToString()) ?? DiscordTimestampStyle.LongDateShortTime; if (_module is not null) await _module.InvokeVoidAsync("save", FormatPreferenceKey, DiscordTimestampEngine.Code(_style)); await RefreshAsync(); }
     private async Task ToggleNote(ChangeEventArgs e) { _includeNote = e.Value is true; if (_module is not null) await _module.InvokeVoidAsync("save", NotePreferenceKey, _includeNote.ToString()); await RefreshAsync(); }
-    private Task ComparisonToggled() { _compareOpen = !_compareOpen; return Task.CompletedTask; }
-    private async Task SelectComparison(DiscordTimestampStyle style) { _style = style; _compareOpen = false; if (_module is not null) await _module.InvokeVoidAsync("save", FormatPreferenceKey, DiscordTimestampEngine.Code(style)); await RefreshAsync(); if (_module is not null) await _module.InvokeVoidAsync("focusOutput"); }
+    private async Task SelectComparison(DiscordTimestampStyle style) { _style = style; if (_module is not null) { await _module.InvokeVoidAsync("closeComparison"); await _module.InvokeVoidAsync("save", FormatPreferenceKey, DiscordTimestampEngine.Code(style)); } await RefreshAsync(); if (_module is not null) await _module.InvokeVoidAsync("focusOutput"); }
     private async Task Copy() { if (!_resolution.IsValid || _module is null) return; var result = await _module.InvokeAsync<CopyResult>("copy", _output, "discord-generated-output"); _copied = result.Success; _status = result.Success ? "Discord timestamp copied." : $"Clipboard access failed. The generated Markdown is selected; {result.Instruction}."; if (_copied) _ = ResetCopiedAsync(); }
     private async Task ResetCopiedAsync() { await Task.Delay(2000); await InvokeAsync(() => { _copied = false; StateHasChanged(); }); }
     private async Task HandleKeyDown(KeyboardEventArgs e) { if (e.Key == "Enter" && (e.CtrlKey || e.MetaKey)) await Copy(); }

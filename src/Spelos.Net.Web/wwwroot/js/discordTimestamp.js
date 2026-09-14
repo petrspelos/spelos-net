@@ -40,3 +40,4 @@ export async function copy(text, outputId) {
 }
 
 export function focusOutput() { document.getElementById("discord-generated-output")?.focus(); }
+export function closeComparison() { document.querySelector("details.compare")?.removeAttribute("open"); }

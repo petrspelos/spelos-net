@@ -39,7 +39,9 @@ jobs:
       - name: Run browser and accessibility tests
         run: dotnet test tests/Spelos.Net.Web.BrowserTests/Spelos.Net.Web.BrowserTests.csproj --configuration Release --no-build
       - name: Report published size
-        run: du -sh src/Spelos.Net.Web/bin/Release/net10.0/publish/wwwroot && find src/Spelos.Net.Web/bin/Release/net10.0/publish/wwwroot -type f -printf '%s\n' | awk '{ total += $1 } END { printf "Uncompressed bytes: %d\n", total }'
+        run: |
+          du -sh src/Spelos.Net.Web/bin/Release/net10.0/publish/wwwroot
+          find src/Spelos.Net.Web/bin/Release/net10.0/publish/wwwroot -type f -printf '%s\n' | awk '{ total += $1 } END { printf "Uncompressed bytes: %d\n", total }'
       - name: Configure Pages
         if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5

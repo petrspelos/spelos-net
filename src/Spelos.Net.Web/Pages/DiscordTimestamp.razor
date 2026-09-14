@@ -1,0 +1,143 @@
+@page "/tools/discord-timestamp"
+@implements IAsyncDisposable
+@using Spelos.Net.Web.Tools
+@inject IJSRuntime JS
+
+<PageTitle>Discord Timestamp Generator | Spelos .NET</PageTitle>
+<main class="page-shell tool-page"><article class="content-card tool-card" @onkeydown="HandleKeyDown">
+    <p class="token-comment">// Share one instant with everyone, in their own local time.</p>
+    <h1>Discord Timestamp Generator</h1>
+    <p>Create Discord timestamp markup instantly from a local date and time.</p>
+
+    <section class="tool-panel" aria-labelledby="local-reference-heading">
+        <h2 id="local-reference-heading">Current local time</h2>
+        <p class="live-reference"><time datetime="@_now.ToString("O")">@_localizedNow</time><span>@_zoneLabel</span></p>
+
+        <div class="field-grid">
+            <label>Date<input type="date" value="@_dateText" @onchange="ChangeDate" /></label>
+            <label>Time<input type="time" step="60" value="@_timeText" @onchange="ChangeTime" /></label>
+        </div>
+        <div class="preset-row" aria-label="Date and time presets">
+            <button type="button" class="secondary" @onclick="SetNow">Now</button>
+            <details class="preset-menu"><summary>More presets</summary><div class="preset-menu-content">
+                <span>Relative</span><button @onclick="() => AddRelative(15)">+15 min</button><button @onclick="() => AddRelative(30)">+30 min</button><button @onclick="() => AddRelative(60)">+1 hour</button>
+                <span>Date</span><button @onclick="SetTomorrow">Tomorrow</button><button @onclick="SetNextMonday">Next Monday</button>
+                <span>Time</span>@foreach (var hour in new[] { 9, 12, 18, 20 }) { <button @onclick="() => SetHour(hour)">@($"{hour:00}:00")</button> }
+            </div></details>
+        </div>
+
+        <label class="format-field">Discord format<select value="@DiscordTimestampEngine.Code(_style)" @onchange="ChangeStyle">
+            @foreach (var item in FormatItems) { <option value="@item.Code">@item.Label (@item.Code)</option> }
+        </select></label>
+
+        <details class="compare" open="@_compareOpen" @ontoggle="ComparisonToggled"><summary>Compare all formats</summary>
+            <div class="comparison-list">@foreach (var item in FormatItems) { <button type="button" @onclick="() => SelectComparison(item.Style)"><strong>@item.Label</strong><span>Browser preview: @ComparisonPreview(item.Code)</span><code>@DiscordTimestampEngine.Markup(_resolution.UnixSeconds, item.Style)</code></button> }</div>
+        </details>
+
+        <div class="result-block">
+            <span class="result-label">Browser preview <small>(approximation)</small></span>
+            <output class="browser-preview">@_browserPreview</output>
+            <span class="result-label">Generated Markdown</span>
+            @if (_resolution.IsValid)
+            {
+                <pre id="discord-generated-output" tabindex="0"><code>@_output</code></pre>
+                <button type="button" class="copy-button" @onclick="Copy">@(_copied ? "Copied!" : "Copy")</button>
+            }
+            else { <p class="validation-error" role="alert">@_resolution.Error</p> }
+        </div>
+
+        @if (_resolution.NearestValidLocalTime is { } nearest)
+        { <button type="button" class="secondary" @onclick="() => UseNearest(nearest)">Use nearest valid time (@nearest.ToString("HH:mm"))</button> }
+        @if (_resolution.IsAmbiguous)
+        { <fieldset class="ambiguity"><legend>This time occurs twice because the clock moves back.</legend><label><input type="radio" name="occurrence" checked="@(!_laterOccurrence)" @onchange="() => SetOccurrence(false)" /> Earlier occurrence</label><label><input type="radio" name="occurrence" checked="@_laterOccurrence" @onchange="() => SetOccurrence(true)" /> Later occurrence</label></fieldset> }
+        @if (_resolution.IsValid && DiscordTimestampEngine.IsPast(_resolution.Instant!.Value, _now)) { <p class="past-status">This time is in the past.</p> }
+
+        <label class="note-choice"><input type="checkbox" checked="@_includeNote" @onchange="ToggleNote" /> Add a time-zone note</label>
+        <p class="status-message" role="status" aria-live="polite">@_status</p>
+    </section>
+
+    <details class="explanation"><summary>How Discord timestamps work</summary><p>Discord renders timestamps in each viewer’s locale and time zone. The Browser preview uses your browser and may differ from Discord in wording or punctuation; the generated Markdown is authoritative.</p></details>
+    <nav><a href="/tools">← All tools</a><a href="/">Home</a></nav>
+</article></main>
+
+@code {
+    private static readonly (DiscordTimestampStyle Style, string Code, string Label)[] FormatItems =
+    [
+        (DiscordTimestampStyle.ShortTime, "t", "Short time"), (DiscordTimestampStyle.LongTime, "T", "Time with seconds"),
+        (DiscordTimestampStyle.ShortDate, "d", "Short date"), (DiscordTimestampStyle.LongDate, "D", "Long date"),
+        (DiscordTimestampStyle.LongDateShortTime, "f", "Long date with short time"), (DiscordTimestampStyle.FullDateTime, "F", "Full date and time"),
+        (DiscordTimestampStyle.ShortDateTime, "s", "Short date with short time"), (DiscordTimestampStyle.ShortDateTimeSeconds, "S", "Short date with time and seconds"),
+        (DiscordTimestampStyle.Relative, "R", "Relative time"),
+    ];
+    private const string FormatPreferenceKey = "spelos.discordTimestamp.format";
+    private const string NotePreferenceKey = "spelos.discordTimestamp.includeNote";
+    private IJSObjectReference? _module;
+    private CancellationTokenSource? _clockCancellation;
+    private TimeZoneInfo _zone = TimeZoneInfo.Local;
+    private DateTimeOffset _now = DateTimeOffset.Now;
+    private DateOnly _date;
+    private TimeOnly _time;
+    private string _dateText = "";
+    private string _timeText = "";
+    private string _localizedNow = "";
+    private string _zoneLabel = "Local time";
+    private string _browserPreview = "";
+    private Dictionary<string, string> _comparisonPreviews = [];
+    private string _output = "";
+    private string _status = "";
+    private DiscordTimestampStyle _style = DiscordTimestampStyle.LongDateShortTime;
+    private LocalTimeResolution _resolution = new(null, Error: "Loading local time…");
+    private bool _includeNote, _laterOccurrence, _copied, _compareOpen;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/discordTimestamp.js");
+        var context = await _module.InvokeAsync<BrowserContext>("getContext");
+        _zoneLabel = !string.IsNullOrWhiteSpace(context.TimeZone) ? context.TimeZone : $"Local time · {context.OffsetLabel}";
+        if (!string.IsNullOrWhiteSpace(context.TimeZone)) try { _zone = TimeZoneInfo.FindSystemTimeZoneById(context.TimeZone); } catch (TimeZoneNotFoundException) { _zone = OffsetZone(context.OffsetMinutes); }
+        else _zone = OffsetZone(context.OffsetMinutes);
+        _style = ParseStyle(await _module.InvokeAsync<string?>("load", FormatPreferenceKey)) ?? DiscordTimestampStyle.LongDateShortTime;
+        _includeNote = bool.TryParse(await _module.InvokeAsync<string?>("load", NotePreferenceKey), out var note) && note;
+        SetNowValue();
+        _clockCancellation = new();
+        _ = RunClock(_clockCancellation.Token);
+        await RefreshAsync();
+    }
+
+    private async Task RunClock(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        try { while (await timer.WaitForNextTickAsync(cancellationToken)) { _now = DateTimeOffset.Now; await InvokeAsync(async () => { await UpdateLocalizedClock(); if (_style == DiscordTimestampStyle.Relative) await UpdatePreview(); StateHasChanged(); }); } }
+        catch (OperationCanceledException) { }
+    }
+
+    private void SetNowValue() { _now = DateTimeOffset.Now; var local = TimeZoneInfo.ConvertTime(_now, _zone); SetFields(DateOnly.FromDateTime(local.DateTime), new TimeOnly(local.Hour, local.Minute)); }
+    private void SetFields(DateOnly date, TimeOnly time) { _date = date; _time = new(time.Hour, time.Minute); _dateText = _date.ToString("yyyy-MM-dd"); _timeText = _time.ToString("HH:mm"); _laterOccurrence = false; Recalculate(); }
+    private void Recalculate() { _resolution = DiscordTimestampEngine.ResolveLocal(_date, _time, _zone, _laterOccurrence); _output = _resolution.IsValid ? DiscordTimestampEngine.Output(_resolution.UnixSeconds, _style, _includeNote) : ""; _copied = false; }
+    private async Task RefreshAsync() { Recalculate(); await UpdateLocalizedClock(); await UpdatePreview(); StateHasChanged(); }
+    private async Task UpdateLocalizedClock() { if (_module is not null) _localizedNow = await _module.InvokeAsync<string>("formatNow"); }
+    private async Task UpdatePreview() { if (_resolution.IsValid && _module is not null) { _browserPreview = await _module.InvokeAsync<string>("preview", _resolution.UnixSeconds, DiscordTimestampEngine.Code(_style)); _comparisonPreviews = await _module.InvokeAsync<Dictionary<string, string>>("previews", _resolution.UnixSeconds); } else { _browserPreview = "Unavailable until the date and time are valid."; _comparisonPreviews.Clear(); } }
+    private string ComparisonPreview(string code) => _comparisonPreviews.GetValueOrDefault(code, "…");
+    private async Task ChangeDate(ChangeEventArgs e) { _dateText = e.Value?.ToString() ?? ""; if (DateOnly.TryParseExact(_dateText, "yyyy-MM-dd", out var date)) { _date = date; await RefreshAsync(); } else { _resolution = new(null, Error: "Enter a valid date."); _output = ""; await UpdatePreview(); } }
+    private async Task ChangeTime(ChangeEventArgs e) { _timeText = e.Value?.ToString() ?? ""; if (TimeOnly.TryParse(_timeText, out var time)) { _time = new(time.Hour, time.Minute); await RefreshAsync(); } else { _resolution = new(null, Error: "Enter a valid time."); _output = ""; await UpdatePreview(); } }
+    private async Task SetNow() { SetNowValue(); await RefreshAsync(); }
+    private async Task AddRelative(int minutes) { if (!_resolution.IsValid) return; var local = TimeZoneInfo.ConvertTime(DiscordTimestampEngine.AddElapsed(_resolution.Instant!.Value, TimeSpan.FromMinutes(minutes)), _zone); SetFields(DateOnly.FromDateTime(local.DateTime), new(local.Hour, local.Minute)); await RefreshAsync(); }
+    private async Task SetTomorrow() { SetFields(DiscordTimestampEngine.Tomorrow(TimeZoneInfo.ConvertTime(_now, _zone)), _time); await RefreshAsync(); }
+    private async Task SetNextMonday() { SetFields(DiscordTimestampEngine.NextMonday(TimeZoneInfo.ConvertTime(_now, _zone)), _time); await RefreshAsync(); }
+    private async Task SetHour(int hour) { SetFields(_date, DiscordTimestampEngine.ClockTime(hour)); await RefreshAsync(); }
+    private async Task UseNearest(DateTime nearest) { SetFields(DateOnly.FromDateTime(nearest), TimeOnly.FromDateTime(nearest)); await RefreshAsync(); }
+    private async Task SetOccurrence(bool later) { _laterOccurrence = later; await RefreshAsync(); }
+    private async Task ChangeStyle(ChangeEventArgs e) { _style = ParseStyle(e.Value?.ToString()) ?? DiscordTimestampStyle.LongDateShortTime; if (_module is not null) await _module.InvokeVoidAsync("save", FormatPreferenceKey, DiscordTimestampEngine.Code(_style)); await RefreshAsync(); }
+    private async Task ToggleNote(ChangeEventArgs e) { _includeNote = e.Value is true; if (_module is not null) await _module.InvokeVoidAsync("save", NotePreferenceKey, _includeNote.ToString()); await RefreshAsync(); }
+    private Task ComparisonToggled() { _compareOpen = !_compareOpen; return Task.CompletedTask; }
+    private async Task SelectComparison(DiscordTimestampStyle style) { _style = style; _compareOpen = false; if (_module is not null) await _module.InvokeVoidAsync("save", FormatPreferenceKey, DiscordTimestampEngine.Code(style)); await RefreshAsync(); if (_module is not null) await _module.InvokeVoidAsync("focusOutput"); }
+    private async Task Copy() { if (!_resolution.IsValid || _module is null) return; var result = await _module.InvokeAsync<CopyResult>("copy", _output, "discord-generated-output"); _copied = result.Success; _status = result.Success ? "Discord timestamp copied." : $"Clipboard access failed. The generated Markdown is selected; {result.Instruction}."; if (_copied) _ = ResetCopiedAsync(); }
+    private async Task ResetCopiedAsync() { await Task.Delay(2000); await InvokeAsync(() => { _copied = false; StateHasChanged(); }); }
+    private async Task HandleKeyDown(KeyboardEventArgs e) { if (e.Key == "Enter" && (e.CtrlKey || e.MetaKey)) await Copy(); }
+    private static DiscordTimestampStyle? ParseStyle(string? code) => FormatItems.FirstOrDefault(item => item.Code == code).Style is var style && FormatItems.Any(item => item.Code == code) ? style : null;
+    private static TimeZoneInfo OffsetZone(int offsetMinutes) => TimeZoneInfo.CreateCustomTimeZone("Browser local offset", TimeSpan.FromMinutes(offsetMinutes), "Browser local offset", "Browser local offset");
+    public async ValueTask DisposeAsync() { _clockCancellation?.Cancel(); _clockCancellation?.Dispose(); if (_module is not null) await _module.DisposeAsync(); }
+    private sealed record BrowserContext(string? TimeZone, string OffsetLabel, int OffsetMinutes);
+    private sealed record CopyResult(bool Success, string Instruction);
+}

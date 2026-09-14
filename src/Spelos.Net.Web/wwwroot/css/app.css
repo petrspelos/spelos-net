@@ -25,7 +25,24 @@ a:focus-visible { outline: 3px solid #f69d68; outline-offset: 4px; border-radius
 .content-card { width: min(100%, 65ch); padding: clamp(1.25rem, 4vw, 2.5rem); background: rgb(13 17 23 / 82%); border: 1px solid rgb(255 255 255 / 12%); border-radius: .75rem; box-shadow: 0 1rem 3rem rgb(0 0 0 / 35%); }
 .content-card h1 { color: #4ec9b0; }
 .content-card nav { display: flex; gap: 1.25rem; }
+.tool-page { align-items: flex-start; }
+.tool-card { width: min(100%, 52rem); min-width: 0; margin-block: 1rem; overflow: hidden; }
+.tool-card h2 { margin: 0; font-size: 1rem; color: #b8d7a3; }
+.tool-panel { display: grid; min-width: 0; gap: 1rem; padding: clamp(1rem, 3vw, 1.5rem); border: 1px solid rgb(88 101 242 / 55%); border-radius: .6rem; background: rgb(4 8 14 / 55%); }.tool-panel > * { min-width: 0; }
+.live-reference { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; margin: -.5rem 0 0; color: #c8d1da; }
+.field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.field-grid label, .format-field { display: grid; gap: .4rem; }
+input, select, button { max-width: 100%; min-height: 2.75rem; padding: .55rem .7rem; border: 1px solid #59636e; border-radius: .35rem; color: #fff; background: #161b22; font: inherit; }
+button { cursor: pointer; } button:hover { border-color: #89929b; } input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible, pre:focus-visible { outline: 3px solid #f69d68; outline-offset: 2px; }
+.preset-row { display: flex; align-items: flex-start; gap: .5rem; }
+.secondary { color: #c9d1d9; }.preset-menu { position: relative; }.preset-menu summary { min-height: 2.75rem; padding: .65rem; border: 1px solid #59636e; border-radius: .35rem; cursor: pointer; }
+.preset-menu-content { z-index: 2; position: absolute; top: calc(100% + .3rem); left: 0; display: grid; grid-template-columns: auto repeat(3, auto); gap: .35rem; width: max-content; max-width: min(90vw, 32rem); padding: .7rem; border: 1px solid #59636e; border-radius: .4rem; background: #161b22; box-shadow: 0 .6rem 1.4rem #000; }
+.preset-menu-content span { align-self: center; color: #9aa7b3; }.preset-menu-content span:nth-of-type(n+2) { grid-column: 1; }
+.compare summary, .explanation summary { cursor: pointer; color: #6cb6e9; }.comparison-list { display: grid; gap: .35rem; margin-top: .6rem; }.comparison-list button { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; text-align: left; }
+.result-block { display: grid; gap: .5rem; }.result-label { color: #9aa7b3; }.result-label small { font: inherit; }.browser-preview { min-height: 1.5rem; font-size: 1.15rem; }.result-block pre { overflow-x: auto; margin: 0; padding: 1rem; border-radius: .35rem; background: #0d1117; color: #b8d7a3; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }.copy-button { border-color: #7884ff; background: #5865f2; font-weight: 700; }
+.validation-error { color: #ffb4ab; }.past-status, .status-message { margin: 0; color: #9aa7b3; }.status-message { min-height: 1.5em; }.note-choice, .ambiguity label { display: flex; align-items: center; gap: .55rem; }.note-choice input, .ambiguity input { min-height: auto; width: 1.1rem; height: 1.1rem; }.ambiguity { display: grid; gap: .5rem; border-color: #59636e; }.explanation { margin-block: 1.25rem; }.tool-catalog-entry { display: grid; gap: .4rem; margin-block: 1.5rem; padding: 1rem; border: 1px solid #59636e; border-radius: .5rem; text-decoration: none; }.tool-catalog-entry span { color: #c8d1da; }
 #blazor-error-ui { display: none; position: fixed; inset: auto 0 0; padding: .75rem 1rem; color: #111; background: #f6c344; text-align: center; }
 @media (min-width: 800px) { .home-shell { flex-direction: row; gap: 1.25rem; } }
 @media (max-width: 430px) { .home-shell { align-items: stretch; } .avatar { align-self: center; } .code-card { font-size: clamp(.72rem, 3.5vw, .9rem); padding-inline: 0; } .link-icon { width: 2rem; height: 2rem; } }
+@media (max-width: 520px) { .field-grid { grid-template-columns: 1fr; }.preset-menu-content { position: fixed; inset: auto .75rem .75rem; grid-template-columns: auto repeat(2, minmax(0, 1fr)); }.tool-card { padding-inline: 1rem; }.comparison-list button { display: grid; } }
 @media (forced-colors: active) { .avatar { box-shadow: 0 0 0 2px CanvasText; } }

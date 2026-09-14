@@ -1,6 +1,7 @@
 using Deque.AxeCore.Playwright;
 using Microsoft.Playwright;
 using Microsoft.Playwright.Xunit;
+using System.Text.RegularExpressions;
 using Xunit.Sdk;
 
 namespace Spelos.Net.Web.BrowserTests;
@@ -49,6 +50,79 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
     }
 
     [Fact]
+    public async Task Discord_timestamp_tool_is_discoverable_and_survives_direct_refresh()
+    {
+        await Page.GotoAsync($"{site.BaseUrl}/tools");
+        await Page.GetByRole(AriaRole.Link, new() { Name = "Discord Timestamp Generator" }).ClickAsync();
+        await ExpectApplicationAsync(Page.GetByRole(AriaRole.Heading, new() { Name = "Discord Timestamp Generator" }));
+        await Page.ReloadAsync();
+
+        await ExpectApplicationAsync(Page.GetByText("Generated Markdown", new() { Exact = true }));
+        await Expect(Page.Locator("#discord-generated-output")).ToContainTextAsync(new Regex("^<t:-?\\d+:f>"));
+        await Expect(Page.Locator(".live-reference span")).ToContainTextAsync(new Regex("Local time|.+/.+"));
+        await Page.GetByText("Compare all formats", new() { Exact = true }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Short time") }).ClickAsync();
+        await Expect(Page.Locator("#discord-generated-output")).ToBeFocusedAsync();
+        Assert.Empty((await Page.RunAxe()).Violations);
+    }
+
+    [Fact]
+    public async Task Discord_timestamp_tool_supports_keyboard_editing_copy_and_persisted_preferences_only()
+    {
+        await Page.GotoAsync($"{site.BaseUrl}/tools/discord-timestamp");
+        await ExpectApplicationAsync(Page.GetByLabel("Date", new() { Exact = true }));
+        var initialDate = await Page.GetByLabel("Date", new() { Exact = true }).InputValueAsync();
+
+        await Page.GetByLabel("Discord format").SelectOptionAsync("F");
+        await Page.GetByLabel("Add a time-zone note").CheckAsync();
+        await Page.GetByLabel("Time", new() { Exact = true }).FillAsync("03:17");
+        await Page.GetByLabel("Time", new() { Exact = true }).PressAsync("Control+Enter");
+        await Expect(Page.Locator(".status-message")).ToContainTextAsync(new Regex("copied|Ctrl\\+C", RegexOptions.IgnoreCase));
+        await Expect(Page.Locator("#discord-generated-output")).ToContainTextAsync("\n\n> This time is shown in your local time zone");
+
+        await Page.ReloadAsync();
+        await Expect(Page.GetByLabel("Discord format")).ToHaveValueAsync("F");
+        await Expect(Page.GetByLabel("Add a time-zone note")).ToBeCheckedAsync();
+        Assert.Equal(initialDate, await Page.GetByLabel("Date", new() { Exact = true }).InputValueAsync());
+        Assert.NotEqual("03:17", await Page.GetByLabel("Time", new() { Exact = true }).InputValueAsync());
+        Assert.Equal(2, await Page.EvaluateAsync<int>("Object.keys(localStorage).filter(key => key.startsWith('spelos.discordTimestamp.')).length"));
+    }
+
+    [Fact]
+    public async Task Discord_timestamp_copy_success_is_temporary_and_browser_context_has_honest_fallback()
+    {
+        await Page.Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"], new() { Origin = site.BaseUrl });
+        await Page.GotoAsync($"{site.BaseUrl}/tools/discord-timestamp");
+        await ExpectApplicationAsync(Page.GetByRole(AriaRole.Button, new() { Name = "Copy" }));
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Copy" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Copied!" })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Copy" })).ToBeVisibleAsync(new() { Timeout = 4000 });
+
+        var fallback = await Page.EvaluateAsync<BrowserZoneContext>("""
+            async () => {
+                const original = Intl.DateTimeFormat.prototype.resolvedOptions;
+                Intl.DateTimeFormat.prototype.resolvedOptions = () => ({});
+                const context = (await import('/js/discordTimestamp.js')).getContext();
+                Intl.DateTimeFormat.prototype.resolvedOptions = original;
+                return context;
+            }
+            """);
+        Assert.Null(fallback.TimeZone);
+        Assert.Matches("^UTC[+-]\\d{2}:\\d{2}$", fallback.OffsetLabel);
+    }
+
+    [Fact]
+    public async Task Discord_timestamp_tool_has_no_mobile_or_two_hundred_percent_overflow()
+    {
+        await Page.SetViewportSizeAsync(375, 667);
+        await Page.GotoAsync($"{site.BaseUrl}/tools/discord-timestamp");
+        await ExpectApplicationAsync(Page.GetByRole(AriaRole.Heading, new() { Name = "Discord Timestamp Generator" }));
+        Assert.False(await Page.EvaluateAsync<bool>("document.documentElement.scrollWidth > document.documentElement.clientWidth"));
+        await Page.EvaluateAsync("document.documentElement.style.fontSize = '200%'");
+        Assert.False(await Page.EvaluateAsync<bool>("document.documentElement.scrollWidth > document.documentElement.clientWidth"));
+    }
+
+    [Fact]
     public async Task Home_fits_a_common_mobile_viewport()
     {
         await Page.SetViewportSizeAsync(375, 667);
@@ -94,5 +168,12 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
         {
             throw new XunitException($"{exception.Message}{Environment.NewLine}{string.Join(Environment.NewLine, _browserErrors)}");
         }
+    }
+
+    private sealed class BrowserZoneContext
+    {
+        public string? TimeZone { get; set; }
+        public string OffsetLabel { get; set; } = "";
+        public int OffsetMinutes { get; set; }
     }
 }

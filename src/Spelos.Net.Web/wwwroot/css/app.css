@@ -1,0 +1,31 @@
+@font-face { font-family: "Caskaydia Cove"; src: url("../fonts/caskaydia-cove.woff2") format("woff2"); font-display: swap; }
+:root { color-scheme: dark; font-family: "Caskaydia Cove", "Cascadia Code", Consolas, monospace; color: #fff; background: #0d1117 url("../img/bg.webp") center / cover fixed; }
+* { box-sizing: border-box; }
+html, body, #app { min-height: 100%; }
+body { margin: 0; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+a { color: #6cb6e9; }
+a:hover { color: #78a9df; }
+a:focus-visible { outline: 3px solid #f69d68; outline-offset: 4px; border-radius: 2px; }
+.home-shell, .page-shell { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 1.25rem; }
+.home-shell { flex-direction: column; gap: 1rem; }
+.avatar { width: min(200px, 46vw); height: auto; aspect-ratio: 1; border-radius: 50%; box-shadow: 0 0 15px #f66918; }
+.code-card { max-width: 100%; overflow-x: auto; padding: .5rem; white-space: nowrap; line-height: 1.55; }
+.indent { padding-left: 2ch; }
+.double-indent { padding-left: 4ch; }
+.link-icon { width: 2.5rem; height: 2.5rem; padding: .3rem; margin-right: .5rem; vertical-align: middle; object-fit: contain; }
+.profile-link { display: inline-flex; align-items: center; }
+.status { color: #9aa7b3; }
+.token-class { color: #4ec9b0; }
+.token-keyword { color: #68aee8; }
+.token-literal { color: #d69d85; }
+.token-enum { color: #b8d7a3; }
+.token-signature { color: #9cdcfc; }
+.token-comment { color: #67bc5b; }
+.content-card { width: min(100%, 65ch); padding: clamp(1.25rem, 4vw, 2.5rem); background: rgb(13 17 23 / 82%); border: 1px solid rgb(255 255 255 / 12%); border-radius: .75rem; box-shadow: 0 1rem 3rem rgb(0 0 0 / 35%); }
+.content-card h1 { color: #4ec9b0; }
+.content-card nav { display: flex; gap: 1.25rem; }
+#blazor-error-ui { display: none; position: fixed; inset: auto 0 0; padding: .75rem 1rem; color: #111; background: #f6c344; text-align: center; }
+@media (min-width: 800px) { .home-shell { flex-direction: row; gap: 1.25rem; } }
+@media (max-width: 430px) { .home-shell { align-items: stretch; } .avatar { align-self: center; } .code-card { font-size: clamp(.72rem, 3.5vw, .9rem); padding-inline: 0; } .link-icon { width: 2rem; height: 2rem; } }
+@media (forced-colors: active) { .avatar { box-shadow: 0 0 0 2px CanvasText; } }

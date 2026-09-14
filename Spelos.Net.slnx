@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Spelos.Net.Web/Spelos.Net.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Spelos.Net.Web.BrowserTests/Spelos.Net.Web.BrowserTests.csproj" />
+    <Project Path="tests/Spelos.Net.Web.Tests/Spelos.Net.Web.Tests.csproj" />
+  </Folder>
+</Solution>

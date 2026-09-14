@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Peter Spelos' personal website and collection of C# tools." />
+    <meta name="theme-color" content="#0d1117" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Spelos .NET" />
+    <meta property="og:description" content="Peter Spelos' personal website and collection of C# tools." />
+    <meta property="og:url" content="https://spelos.net/" />
+    <meta property="og:image" content="https://spelos.net/img/avatar.webp" />
+    <link rel="canonical" href="https://spelos.net/" />
+    <link rel="icon" href="favicon.ico" />
+    <link rel="preload" id="webassembly" />
+    <link rel="stylesheet" href="css/app.css" />
+    <base href="/" />
+    <title>Spelos .NET</title>
+    <script>
+        (function (location) {
+            const parameters = new URLSearchParams(location.search);
+            const redirectedPath = parameters.get('p');
+            if (redirectedPath !== null) {
+                const query = parameters.get('q');
+                history.replaceState(null, '', redirectedPath + (query ? '?' + query.replaceAll('~and~', '&') : '') + location.hash);
+            }
+        })(window.location);
+    </script>
+    <script type="importmap"></script>
+</head>
+<body>
+    <div id="app"><main class="page-shell" aria-busy="true"><p class="token-comment">// Loading Spelos .NET…</p></main></div>
+    <div id="blazor-error-ui" role="alert">Something went wrong. <a href="." class="reload">Reload</a></div>
+    <script src="decode#[.{fingerprint}].js"></script>
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js" autostart="false"></script>
+    <script>
+        Blazor.start({
+            loadBootResource: function (type, name, defaultUri) {
+                if (type !== 'dotnetjs' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                    return fetch(defaultUri + '.br', { cache: 'no-cache' })
+                        .then(response => {
+                            if (!response.ok) throw new Error(response.statusText);
+                            return response.arrayBuffer();
+                        })
+                        .then(buffer => {
+                            const decompressed = BrotliDecode(new Int8Array(buffer));
+                            const contentType = type === 'dotnetwasm' ? 'application/wasm' : 'application/octet-stream';
+                            return new Response(decompressed, { headers: { 'content-type': contentType } });
+                        });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

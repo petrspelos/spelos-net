@@ -1,0 +1,5 @@
+[
+  { "name": "GitHub", "destination": "https://github.com/petrspelos", "iconPath": "img/logo-github.webp", "kind": "external" },
+  { "name": "YouTube", "destination": "https://www.youtube.com/@PeterSpelos", "iconPath": "img/logo-youtube.webp", "kind": "external" },
+  { "name": "Tools", "destination": "/tools", "iconPath": "img/tools.svg", "kind": "internal" }
+]

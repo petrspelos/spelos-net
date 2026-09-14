@@ -1,23 +1,42 @@
 # Spelos .NET
 
-This is a repository containing the source code of my personal website [spelos.net](https://spelos.net).
+The source for [spelos.net](https://spelos.net), Peter Spelos' personal website and collection of client-side C# tools.
 
-## Current focus
+The site is a standalone .NET 10 Blazor WebAssembly application deployed to GitHub Pages. Its home page retains the original code-inspired business-card design, while `/tools` is the home for future interactive tools.
 
-The current implementation uses HUGO static website generator to implement a very simple page with links.
+## Run locally
 
-The implementation isn't actually using any of the article functionalities so we are not locked to HUGO.
+```powershell
+dotnet run --project src/Spelos.Net.Web
+```
 
-Next up, we would like to get rid of HUGO altogether and convert the project into Blazor WASM.
+Use the URL printed by the development server. The project requires the .NET SDK version selected in `global.json`.
 
-Most of the HUGO page is made with custom CSS and HTML so the transition should be relatively painless.
+## Edit home-page links
 
-Part of the port should also be the GitHub CI/CD pipeline change in order to properly deploy to GitHub Pages.
+Edit `src/Spelos.Net.Web/wwwroot/data/links.json`. Entries appear in array order and contain:
 
-The current project already deploys to GitHub pages as seen by the pipeline files in this repository.
+- `name`: visible link text
+- `destination`: an absolute HTTPS URL for external links or a root-relative path for internal links
+- `iconPath`: a path beneath `wwwroot`
+- `kind`: `external` or `internal`
 
-Microsoft has an official deployment on GitHub pages guide for WASM: https://learn.microsoft.com/en-us/aspnet/core/blazor/host-and-deploy/webassembly/github-pages?view=aspnetcore-10.0
+The test suite rejects missing fields, unsafe destinations, duplicate names or destinations, and missing icons.
 
-That's basically our target.
+## Test
 
-Given that our repo is already set up to deploy on GH Pages, we might be able to switch completely without leaving the repo.
+```powershell
+dotnet test tests/Spelos.Net.Web.Tests
+dotnet build tests/Spelos.Net.Web.BrowserTests -c Release
+pwsh tests/Spelos.Net.Web.BrowserTests/bin/Release/net10.0/playwright.ps1 install chromium
+dotnet run --project src/Spelos.Net.Web -c Release --no-build --urls http://127.0.0.1:5080
+```
+
+With the site running, execute the browser tests in another terminal:
+
+```powershell
+$env:SPELOS_BASE_URL = 'http://127.0.0.1:5080'
+dotnet test tests/Spelos.Net.Web.BrowserTests -c Release --no-build
+```
+
+GitHub Actions runs all build, content, browser, and accessibility checks for branches and pull requests. Only `master` publishes to GitHub Pages.

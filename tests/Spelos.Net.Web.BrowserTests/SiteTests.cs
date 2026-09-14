@@ -17,6 +17,10 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
         {
             if (message.Type == "error") _browserErrors.Add($"Console error: {message.Text}");
         };
+        Page.Response += (_, response) =>
+        {
+            if (response.Status >= 400) _browserErrors.Add($"HTTP {response.Status}: {response.Url}");
+        };
     }
 
     [Fact]

@@ -40,7 +40,7 @@ public sealed class PublishedSiteFixture : IAsyncLifetime
         await _application.StartAsync();
         var address = _application.Urls.Single();
         var port = new Uri(address).Port;
-        BaseUrl = $"http://spelos.localhost:{port}";
+        BaseUrl = $"http://127.0.0.1:{port}";
     }
 
     public async Task DisposeAsync()

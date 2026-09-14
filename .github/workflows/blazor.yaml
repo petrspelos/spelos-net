@@ -33,7 +33,7 @@ jobs:
       - name: Run component and content tests
         run: dotnet test tests/Spelos.Net.Web.Tests/Spelos.Net.Web.Tests.csproj --configuration Release --no-build
       - name: Publish
-        run: dotnet publish src/Spelos.Net.Web/Spelos.Net.Web.csproj --configuration Release --no-build
+        run: dotnet publish src/Spelos.Net.Web/Spelos.Net.Web.csproj --configuration Release --no-restore
       - name: Install Chromium
         run: pwsh tests/Spelos.Net.Web.BrowserTests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
       - name: Run browser and accessibility tests

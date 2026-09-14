@@ -36,7 +36,7 @@
     <script>
         Blazor.start({
             loadBootResource: function (type, name, defaultUri) {
-                if (type !== 'dotnetjs' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                if (type !== 'dotnetjs' && location.hostname !== 'localhost') {
                     return fetch(defaultUri + '.br', { cache: 'no-cache' })
                         .then(response => {
                             if (!response.ok) throw new Error(response.statusText);

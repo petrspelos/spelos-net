@@ -63,16 +63,12 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
         await ExpectApplicationAsync(Page.GetByRole(AriaRole.Heading, new() { Name = "Discord Timestamp Generator" }));
         await Page.ReloadAsync();
 
-        await ExpectApplicationAsync(Page.GetByText("Generated Markdown", new() { Exact = true }));
+        await ExpectApplicationAsync(Page.GetByText("Ready to paste", new() { Exact = true }));
         await Expect(Page.Locator("#discord-generated-output")).ToContainTextAsync(new Regex("^<t:-?\\d+:f>"));
-        await Expect(Page.Locator(".live-reference span")).ToHaveTextAsync("UTC");
-        await Page.EvaluateAsync("window.compareToggleCount = 0; document.querySelector('details.compare').addEventListener('toggle', () => window.compareToggleCount++)");
-        await Page.GetByText("Compare all formats", new() { Exact = true }).ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Short time") }).ClickAsync();
-        await Expect(Page.Locator("#discord-generated-output")).ToBeFocusedAsync();
-        await Expect(Page.Locator("details.compare")).Not.ToHaveAttributeAsync("open", "", new() { Timeout = 2000 });
-        await Page.WaitForTimeoutAsync(500);
-        Assert.InRange(await Page.EvaluateAsync<int>("window.compareToggleCount"), 1, 2);
+        await Expect(Page.Locator(".zone-hint strong")).ToHaveTextAsync("UTC");
+        await Page.GetByLabel("Short time", new() { Exact = true }).CheckAsync();
+        await Expect(Page.GetByLabel("Short time", new() { Exact = true })).ToBeCheckedAsync();
+        await Expect(Page.Locator("#discord-generated-output")).ToContainTextAsync(new Regex("^<t:-?\\d+:t>"));
         Assert.Empty((await Page.RunAxe()).Violations);
     }
 
@@ -83,16 +79,17 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
         await ExpectApplicationAsync(Page.GetByLabel("Date", new() { Exact = true }));
         var initialDate = await Page.GetByLabel("Date", new() { Exact = true }).InputValueAsync();
 
-        await Page.GetByLabel("Discord format").SelectOptionAsync("F");
-        await Page.GetByLabel("Add a time-zone note").CheckAsync();
+        await Page.GetByLabel("Full date and time", new() { Exact = true }).CheckAsync();
+        await Page.GetByText("Options and help", new() { Exact = true }).ClickAsync();
+        await Page.GetByLabel("Include a time-zone note when copying").CheckAsync();
         await Page.GetByLabel("Time", new() { Exact = true }).FillAsync("03:17");
         await Page.GetByLabel("Time", new() { Exact = true }).PressAsync("Control+Enter");
         await Expect(Page.Locator(".status-message")).ToContainTextAsync(new Regex("copied|Ctrl\\+C", RegexOptions.IgnoreCase));
         await Expect(Page.Locator("#discord-generated-output")).ToContainTextAsync("\n\n> This time is shown in your local time zone");
 
         await Page.ReloadAsync();
-        await Expect(Page.GetByLabel("Discord format")).ToHaveValueAsync("F");
-        await Expect(Page.GetByLabel("Add a time-zone note")).ToBeCheckedAsync();
+        await Expect(Page.GetByLabel("Full date and time", new() { Exact = true })).ToBeCheckedAsync();
+        await Expect(Page.GetByLabel("Include a time-zone note when copying")).ToBeCheckedAsync();
         Assert.Equal(initialDate, await Page.GetByLabel("Date", new() { Exact = true }).InputValueAsync());
         Assert.NotEqual("03:17", await Page.GetByLabel("Time", new() { Exact = true }).InputValueAsync());
         Assert.Equal(2, await Page.EvaluateAsync<int>("Object.keys(localStorage).filter(key => key.startsWith('spelos.discordTimestamp.')).length"));
@@ -103,10 +100,10 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
     {
         await Page.Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"], new() { Origin = site.BaseUrl });
         await Page.GotoAsync($"{site.BaseUrl}/tools/discord-timestamp");
-        await ExpectApplicationAsync(Page.GetByRole(AriaRole.Button, new() { Name = "Copy" }));
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Copy" }).ClickAsync();
+        await ExpectApplicationAsync(Page.GetByRole(AriaRole.Button, new() { Name = "Copy Discord timestamp" }));
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Copy Discord timestamp" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Copied!" })).ToBeVisibleAsync();
-        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Copy" })).ToBeVisibleAsync(new() { Timeout = 4000 });
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Copy Discord timestamp" })).ToBeVisibleAsync(new() { Timeout = 4000 });
 
         var fallback = await Page.EvaluateAsync<BrowserZoneContext>("""
             async () => {

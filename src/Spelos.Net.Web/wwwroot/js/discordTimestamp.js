@@ -38,6 +38,3 @@ export async function copy(text, outputId) {
         return { success: false, instruction: /Mac|iPhone|iPad/.test(navigator.platform) ? "press Cmd+C" : "press Ctrl+C" };
     }
 }
-
-export function focusOutput() { document.getElementById("discord-generated-output")?.focus(); }
-export function closeComparison() { document.querySelector("details.compare")?.removeAttribute("open"); }

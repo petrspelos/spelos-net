@@ -124,9 +124,9 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
         await Page.SetViewportSizeAsync(375, 667);
         await Page.GotoAsync($"{site.BaseUrl}/tools/discord-timestamp");
         await ExpectApplicationAsync(Page.GetByRole(AriaRole.Heading, new() { Name = "Discord Timestamp Generator" }));
-        Assert.False(await Page.EvaluateAsync<bool>("document.documentElement.scrollWidth > document.documentElement.clientWidth"));
+        await AssertNoHorizontalOverflowAsync();
         await Page.EvaluateAsync("document.documentElement.style.fontSize = '200%'");
-        Assert.False(await Page.EvaluateAsync<bool>("document.documentElement.scrollWidth > document.documentElement.clientWidth"));
+        await AssertNoHorizontalOverflowAsync();
     }
 
     [Fact]
@@ -175,6 +175,22 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
         {
             throw new XunitException($"{exception.Message}{Environment.NewLine}{string.Join(Environment.NewLine, _browserErrors)}");
         }
+    }
+
+    private async Task AssertNoHorizontalOverflowAsync()
+    {
+        var overflowingElements = await Page.EvaluateAsync<string[]>("""
+            () => [...document.querySelectorAll('body *')]
+                .filter(element => {
+                    const bounds = element.getBoundingClientRect();
+                    return bounds.left < 0 || bounds.right > document.documentElement.clientWidth;
+                })
+                .map(element => `${element.tagName.toLowerCase()}.${element.className}: ${Math.round(element.getBoundingClientRect().left)}..${Math.round(element.getBoundingClientRect().right)}`)
+            """);
+
+        Assert.False(
+            await Page.EvaluateAsync<bool>("document.documentElement.scrollWidth > document.documentElement.clientWidth"),
+            $"Horizontal overflow caused by: {string.Join(", ", overflowingElements)}");
     }
 
     private sealed class BrowserZoneContext

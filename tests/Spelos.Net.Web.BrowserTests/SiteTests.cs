@@ -183,9 +183,9 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
             () => [...document.querySelectorAll('body *')]
                 .filter(element => {
                     const bounds = element.getBoundingClientRect();
-                    return bounds.left < 0 || bounds.right > document.documentElement.clientWidth;
+                    return bounds.left < 0 || bounds.right > document.documentElement.clientWidth || element.scrollWidth > element.clientWidth;
                 })
-                .map(element => `${element.tagName.toLowerCase()}.${element.className}: ${Math.round(element.getBoundingClientRect().left)}..${Math.round(element.getBoundingClientRect().right)}`)
+                .map(element => `${element.tagName.toLowerCase()}.${element.className}: bounds ${Math.round(element.getBoundingClientRect().left)}..${Math.round(element.getBoundingClientRect().right)}, width ${element.clientWidth}/${element.scrollWidth}`)
             """);
 
         Assert.False(

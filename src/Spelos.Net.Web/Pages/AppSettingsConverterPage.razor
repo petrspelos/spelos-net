@@ -1,0 +1,147 @@
+@page "/tools/appsettings-converter"
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<PageTitle>Appsettings Configuration Converter | Spelos .NET</PageTitle>
+<main class="page-shell tool-page">
+    <article class="content-card tool-card converter">
+        <h1>Appsettings Configuration Converter</h1>
+        <p>Convert appsettings JSON into Docker Compose .env or Windows PowerShell assignments for .NET 8+ applications.</p>
+        <p>Processing stays in browser memory. Configuration is never uploaded, saved in browser storage, or added to URLs.</p>
+        <section class="tool-panel" aria-label="Configuration input">
+            <label for="configuration-json">Appsettings JSON</label>
+            <textarea id="configuration-json" rows="12" spellcheck="false" @bind="_json" @bind:event="oninput" @bind:after="Invalidate"></textarea>
+            <label for="configuration-file">Upload JSON file</label>
+            <InputFile id="configuration-file" accept=".json,application/json" OnChange="Upload" />
+            <p class="field-helper">Comments and trailing commas are accepted. Upload limit: 5 MiB.</p>
+            <label for="configuration-prefix">Exact provider prefix</label>
+            <input id="configuration-prefix" type="text" @bind="_prefix" @bind:event="oninput" @bind:after="Invalidate" spellcheck="false" aria-describedby="prefix-help" />
+            <p id="prefix-help">Optional; nothing is added by default. Enter any separator yourself, for example APP_.</p>
+            <label for="configuration-format">Output format</label>
+            <select id="configuration-format" @bind="_format" @bind:after="Invalidate">
+                <option value="Compose">Docker Compose .env</option>
+                <option value="PowerShell">Windows PowerShell 7.5+</option>
+            </select>
+            <button type="button" @onclick="Convert" disabled="@_uploading">Convert</button>
+        </section>
+        @if (_errors.Count > 0)
+        {
+            <div class="validation-error" role="alert"><p>Conversion needs attention:</p><ul>@foreach (var error in _errors) { <li><code>@error.Path</code>: @error.Message</li> }</ul></div>
+        }
+        <section class="result-block" aria-label="Conversion result">
+            @if (_output is not null)
+            {
+                <label for="configuration-output">Generated output</label>
+                <textarea id="configuration-output" rows="10" readonly spellcheck="false" value="@_output"></textarea>
+            }
+            <div class="quick-actions">
+                <button type="button" @onclick="Copy" disabled="@(_output is null)">Copy</button>
+                <button type="button" @onclick="Download" disabled="@(_output is null)">Download</button>
+            </div>
+            <p role="status" aria-live="polite">@_status</p>
+        </section>
+        <section class="explanation" aria-labelledby="configuration-help">
+            <h2 id="configuration-help">Use the output</h2>
+            <p>Nested names use double underscores; array entries use zero-based indices. Strings, numbers and booleans remain configuration text. Nulls, empty containers and ambiguous names produce errors rather than partial output.</p>
+            <p>For .NET 8+, environment variables map to configuration paths, then to your options section. A provider prefix is stripped; it is not another section. For example, APP_Options__Name maps to Options:Name with:</p>
+            <pre><code>builder.Configuration.AddEnvironmentVariables(prefix: "APP_");
+builder.Services.Configure&lt;MyOptions&gt;(builder.Configuration.GetSection("Options"));</code></pre>
+            <p>With no prefix, normal ASP.NET Core defaults already load environment variables after appsettings.json. Other hosts can add AddEnvironmentVariables() explicitly. The site's .NET 10 runtime does not require your application to use .NET 10.</p>
+            <p>Overrides merge per key. Exporting array index 0 does not delete index 1 from underlying JSON. A shorter array does not replace the entire section.</p>
+            @if (_format == ConfigurationOutputFormat.Compose)
+            {
+                <p>Save the download as appsettings.env and reference it using <code>env_file: ./appsettings.env</code> on your application's Compose service. Compose's project .env file primarily supplies interpolation; its variables must be passed to the application environment. .NET does not load .env files automatically. This format targets Docker Compose, not every dotenv loader.</p>
+            }
+            else
+            {
+                <p>Run the .ps1 in Windows PowerShell 7.5+ (PowerShell Core), or paste its assignments into that session. It overwrites matching User variables and refreshes the script's current Process environment, leaving unrelated variables alone. It never writes Machine scope. Empty strings are blocked because the persistent User API deletes them.</p>
+                <p>Launch your application from the updated session. A separately launched PowerShell process cannot update its parent. Applications already running do not automatically acquire new values.</p>
+            }
+        </section>
+        <nav><a href="/tools">← All tools</a><a href="/">Home</a></nav>
+    </article>
+</main>
+
+@code {
+    private string _json = "", _prefix = "", _status = "";
+    private ConfigurationOutputFormat _format;
+    private string? _output;
+    private IReadOnlyList<ConfigurationError> _errors = [];
+    private IJSObjectReference? _module;
+    private bool _uploading;
+    private int _revision, _uploadId;
+
+    private void Invalidate()
+    {
+        _revision++;
+        _output = null;
+        _errors = [];
+        _status = "Inputs changed. Press Convert to generate output.";
+    }
+
+    private void Convert()
+    {
+        var result = AppSettingsConverter.Convert(_json, _prefix, _format);
+        _output = result.Output;
+        _errors = result.Errors;
+        _status = _output is null ? "Conversion failed. Review the errors." : "Conversion complete. Output is ready to copy or download.";
+    }
+
+    private async Task Upload(InputFileChangeEventArgs args)
+    {
+        Invalidate();
+        var revision = _revision;
+        var uploadId = ++_uploadId;
+        _uploading = true;
+        try
+        {
+            await using var stream = args.File.OpenReadStream(5 * 1024 * 1024);
+            using var reader = new StreamReader(stream, new System.Text.UTF8Encoding(false, true), detectEncodingFromByteOrderMarks: true);
+            var json = await reader.ReadToEndAsync();
+            if (_revision != revision) return;
+            Invalidate();
+            _json = json;
+            _status = "File loaded. Press Convert to generate output.";
+        }
+        catch (Exception exception) when (exception is IOException or System.Text.DecoderFallbackException or InvalidOperationException)
+        {
+            if (_revision == revision) _errors = [new("$", "Could not read the file. Choose a valid JSON text file up to 5 MiB.")];
+        }
+        finally { if (_uploadId == uploadId) _uploading = false; }
+    }
+
+    private async Task<IJSObjectReference> Module() => _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/configurationConverter.js");
+
+    private async Task Copy()
+    {
+        if (_output is null) return;
+        var revision = _revision;
+        var output = _output;
+        try
+        {
+            var module = await Module();
+            if (_revision != revision) return;
+            var success = await module.InvokeAsync<bool>("copy", output, "configuration-output");
+            if (_revision == revision) _status = success ? "Output copied." : "Clipboard access failed. Output is selected; press Ctrl+C or Command+C to copy.";
+        }
+        catch (JSException) { if (_revision == revision) _status = "Clipboard access failed. Select the generated output and copy it manually."; }
+    }
+
+    private async Task Download()
+    {
+        if (_output is null) return;
+        var revision = _revision;
+        var output = _output;
+        var filename = _format == ConfigurationOutputFormat.Compose ? "appsettings.env" : "appsettings.ps1";
+        try
+        {
+            var module = await Module();
+            if (_revision != revision) return;
+            await module.InvokeVoidAsync("download", output, filename);
+            if (_revision == revision) _status = "Download prepared.";
+        }
+        catch (JSException) { if (_revision == revision) _status = "Download failed. Copy the generated output instead."; }
+    }
+
+    public async ValueTask DisposeAsync() { if (_module is not null) await _module.DisposeAsync(); }
+}

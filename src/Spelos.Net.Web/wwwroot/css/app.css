@@ -59,3 +59,11 @@ button { cursor: pointer; } button:hover { border-color: #89929b; } input:focus-
 .options-help { margin-top: 1.5rem; color: #abb1c2; }.options-help summary { cursor: pointer; color: #c6caff; font-weight: 650; }.options-help > div { display: grid; gap: .75rem; padding: 1rem 0 0; }.options-help p { max-width: 48rem; margin: 0; font-size: .88rem; line-height: 1.6; }.timestamp-nav { display: flex; gap: 1.25rem; margin-top: 2rem; font-size: .88rem; }.timestamp-nav a { color: #9299aa; }
 @media (max-width: 700px) { .timestamp-page { padding: 0; }.timestamp-workspace { padding: 1.25rem 1rem 2rem; border: 0; border-radius: 0; box-shadow: none; }.timestamp-heading { padding-top: .75rem; }.section-heading { display: grid; }.section-heading p { margin-left: 2.45rem; text-align: left; } }
 @media (max-width: 350px) { .timestamp-field-grid { grid-template-columns: 1fr; }.timestamp-heading h1 { font-size: 1.9rem; } }
+
+.converter { display: grid; gap: 1rem; }
+.converter h1 { overflow-wrap: anywhere; }
+.converter textarea { width: 100%; min-width: 0; max-width: 100%; padding: .75rem; border: 1px solid #59636e; border-radius: .35rem; color: #fff; background: #161b22; font: inherit; resize: vertical; }
+.converter textarea:focus-visible { outline: 3px solid #f69d68; outline-offset: 2px; }
+.converter pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.converter .validation-error { overflow-wrap: anywhere; }
+.converter button:disabled { opacity: .6; cursor: default; }

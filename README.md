@@ -33,4 +33,16 @@ pwsh tests/Spelos.Net.Web.BrowserTests/bin/Release/net10.0/playwright.ps1 instal
 dotnet test tests/Spelos.Net.Web.BrowserTests -c Release --no-build
 ```
 
+The conversion consumer tests require Docker Compose v2+ (`docker compose`) and PowerShell 7.5+ (`pwsh`). They only parse Compose configuration (no Docker daemon needed), and intercept persistent environment writes in an isolated PowerShell process. Set `SPELOS_COMPOSE_PATH` to use a standalone Compose executable instead of `docker compose`.
+
 GitHub Actions runs all build, content, browser, and accessibility checks for branches and pull requests. Only `master` publishes to GitHub Pages.
+
+## Appsettings configuration converter
+
+Visit `/tools/appsettings-converter` to paste or upload appsettings JSON, enter an optional exact provider prefix, and explicitly convert to Docker Compose `.env` or a Windows PowerShell 7.5+ `.ps1`. Copy and Download become available after successful conversion and clear when inputs change. Processing stays in browser memory without configuration storage or uploads.
+
+The output targets .NET 8+ applications: nested paths use `__` and array indices start at zero. Add the environment provider after JSON and bind the desired section with `Configure<TOptions>(configuration.GetSection("Options"))`. An exact prefix such as `APP_` is stripped by `AddEnvironmentVariables(prefix: "APP_")`; it is not an options section. Environment overrides merge individual keys, so a shorter array does not remove underlying entries.
+
+For Compose, attach the downloaded file to your service with `env_file: ./appsettings.env`. A project `.env` primarily provides interpolation and is not automatically passed to the application; .NET itself does not read `.env`. This export targets Compose syntax rather than universal dotenv compatibility.
+
+On Windows, execute the `.ps1` in PowerShell 7.5+ or paste it into your session. It overwrites matching User variables and updates its own Process scope, leaving unrelated variables untouched. A child shell cannot update its parent's environment, and existing applications do not automatically refresh. Empty strings are rejected for this format because persistent User assignments would delete the variable; Compose preserves them. Strings containing carriage returns use UTF-8 Base64 expressions to avoid PowerShell's source-line normalization.

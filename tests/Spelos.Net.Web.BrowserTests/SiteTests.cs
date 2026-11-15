@@ -165,6 +165,53 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
         Assert.Empty((await Page.RunAxe()).Violations);
     }
 
+    [Fact]
+    public async Task Appsettings_converter_supports_upload_copy_download_and_invalidates_stale_output()
+    {
+        await Page.Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"], new() { Origin = site.BaseUrl });
+        await Page.GotoAsync($"{site.BaseUrl}/tools");
+        await Page.GetByRole(AriaRole.Link, new() { Name = "Appsettings Configuration Converter" }).ClickAsync();
+        await ExpectApplicationAsync(Page.GetByRole(AriaRole.Heading, new() { Name = "Appsettings Configuration Converter" }));
+        await Page.ReloadAsync();
+        var requests = new List<IRequest>();
+        Page.Request += (_, request) => requests.Add(request);
+        var json = Page.GetByLabel("Appsettings JSON", new() { Exact = true });
+        await ExpectApplicationAsync(json);
+        await Page.GetByLabel("Upload JSON file").SetInputFilesAsync(new FilePayload { Name = "appsettings.json", MimeType = "application/json", Buffer = System.Text.Encoding.UTF8.GetBytes("{\"Options\":{\"Name\":\"Ada\"}}") });
+        await Expect(json).ToHaveValueAsync("{\"Options\":{\"Name\":\"Ada\"}}");
+        await Page.GetByLabel("Exact provider prefix").FillAsync("APP_");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Convert", Exact = true }).FocusAsync();
+        await Page.Keyboard.PressAsync("Enter");
+        var output = Page.GetByLabel("Generated output");
+        await Expect(output).ToHaveValueAsync("APP_Options__Name='Ada'\n");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Copy", Exact = true }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Status)).ToHaveTextAsync("Output copied.");
+        Assert.Equal("APP_Options__Name='Ada'\n", (await Page.EvaluateAsync<string>("navigator.clipboard.readText()")).Replace("\r\n", "\n", StringComparison.Ordinal));
+        var download = await Page.RunAndWaitForDownloadAsync(() => Page.GetByRole(AriaRole.Button, new() { Name = "Download", Exact = true }).ClickAsync());
+        Assert.Equal("appsettings.env", download.SuggestedFilename);
+        Assert.Equal("APP_Options__Name='Ada'\n", await File.ReadAllTextAsync((await download.PathAsync())!));
+        Assert.Empty((await Page.RunAxe()).Violations);
+        await Page.GetByLabel("Output format").SelectOptionAsync("PowerShell");
+        await Expect(output).ToHaveCountAsync(0);
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Copy", Exact = true })).ToBeDisabledAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Convert", Exact = true }).ClickAsync();
+        Assert.Contains("'User'", await output.InputValueAsync());
+        var script = await Page.RunAndWaitForDownloadAsync(() => Page.GetByRole(AriaRole.Button, new() { Name = "Download", Exact = true }).ClickAsync());
+        Assert.Equal("appsettings.ps1", script.SuggestedFilename);
+        await json.FillAsync("{\"Bad\":null}");
+        await Expect(output).ToHaveCountAsync(0);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Convert", Exact = true }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Alert)).ToContainTextAsync("$[\"Bad\"]");
+        Assert.Empty((await Page.RunAxe()).Violations);
+        await Page.SetViewportSizeAsync(375, 667);
+        await AssertNoHorizontalOverflowAsync();
+        await Page.EvaluateAsync("document.documentElement.style.fontSize = '200%'");
+        await AssertNoHorizontalOverflowAsync();
+        Assert.DoesNotContain(requests, request => request.Method != "GET" || request.Url.Contains("Ada", StringComparison.Ordinal) || request.PostData is not null);
+        Assert.Equal(0, await Page.EvaluateAsync<int>("localStorage.length + sessionStorage.length"));
+        await Page.ReloadAsync();
+        await Expect(json).ToHaveValueAsync("");
+    }
     private async Task ExpectApplicationAsync(ILocator locator)
     {
         try

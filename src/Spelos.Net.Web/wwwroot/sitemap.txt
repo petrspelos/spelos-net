@@ -1,2 +1,3 @@
 https://spelos.net/
 https://spelos.net/tools
+https://spelos.net/tools/appsettings-converter

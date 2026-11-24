@@ -1,6 +1,6 @@
 # Accessibility verification
 
-The Blazor migration targets applicable WCAG 2.2 Level AA criteria. Automated Playwright and axe checks cover the Home page, Tools page, and not-found view.
+The Blazor migration targets applicable WCAG 2.2 Level AA criteria. Automated Playwright and axe checks cover the Home page, Tools page, not-found view, and the Discord Timestamp Generator, Appsettings Configuration Converter, and JSON Toolkit tools.
 
 Manual verification completed on 2026-09-14:
 

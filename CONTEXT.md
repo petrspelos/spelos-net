@@ -35,3 +35,11 @@ _Avoid_: Disclaimer, warning
 **Browser preview**:
 A localized approximation of how Discord will render a Discord timestamp; the generated Discord timestamp remains authoritative.
 _Avoid_: Discord preview, exact preview
+
+**JSON Toolkit**:
+A tool at `/tools/json-toolkit` that groups JSON operations; Format is its first operation.
+_Avoid_: JSON formatter (for the whole tool), JSON tools
+
+**Format**:
+The JSON Toolkit operation that rewrites JSON with consistent indentation or minification while changing only whitespace.
+_Avoid_: Prettify, beautify

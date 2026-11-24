@@ -67,3 +67,15 @@ button { cursor: pointer; } button:hover { border-color: #89929b; } input:focus-
 .converter pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .converter .validation-error { overflow-wrap: anywhere; }
 .converter button:disabled { opacity: .6; cursor: default; }
+.json-toolkit { width: min(100%, 76rem); }
+.json-settings { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1rem 2.5rem; }
+.json-settings fieldset { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin: 0; padding: 0; border: 0; }
+.json-settings legend, .json-indent-size label { width: 100%; margin-bottom: .4rem; color: #9aa7b3; font-size: .82rem; }
+.json-indent-size { display: grid; }
+.json-panes { display: grid; gap: 1rem; min-width: 0; }
+.json-pane { align-content: start; gap: .75rem; }
+.json-pane .quick-actions { margin-top: 0; }
+.json-toolkit .json-pane textarea { min-height: 20rem; overflow: auto; white-space: pre; font-size: .85rem; tab-size: 4; }
+.json-error { display: grid; justify-items: start; gap: .5rem; min-height: 20rem; align-content: start; }
+.json-error p { margin: 0; }
+@media (min-width: 900px) { .json-panes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

@@ -212,6 +212,99 @@ public sealed class SiteTests(PublishedSiteFixture site) : PageTest, IClassFixtu
         await Page.ReloadAsync();
         await Expect(json).ToHaveValueAsync("");
     }
+
+    [Fact]
+    public async Task Json_toolkit_is_discoverable_formats_live_and_explains_errors()
+    {
+        await Page.Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"], new() { Origin = site.BaseUrl });
+        await Page.GotoAsync($"{site.BaseUrl}/tools");
+        await Page.GetByRole(AriaRole.Link, new() { Name = "JSON Toolkit" }).ClickAsync();
+        await ExpectApplicationAsync(Page.GetByRole(AriaRole.Heading, new() { Name = "JSON Toolkit" }));
+        await Page.ReloadAsync();
+        var input = Page.GetByLabel("Input", new() { Exact = true });
+        var output = Page.GetByLabel("Formatted JSON", new() { Exact = true });
+        await ExpectApplicationAsync(input);
+        await Expect(output).ToHaveValueAsync("");
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Copy", Exact = true })).ToBeDisabledAsync();
+
+        await input.PressSequentiallyAsync("""{"b":[1,2],"a":{}}""");
+        await Expect(output).ToHaveValueAsync("{\n  \"b\": [\n    1,\n    2\n  ],\n  \"a\": {}\n}");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Copy", Exact = true }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Status)).ToHaveTextAsync("Formatted JSON copied.");
+        Assert.Equal("{\n  \"b\": [\n    1,\n    2\n  ],\n  \"a\": {}\n}", (await Page.EvaluateAsync<string>("navigator.clipboard.readText()")).Replace("\r\n", "\n", StringComparison.Ordinal));
+        Assert.Empty((await Page.RunAxe()).Violations);
+
+        await input.FillAsync("{\n  \"é\": 1,\n  x: 2\n}");
+        await Expect(Page.GetByRole(AriaRole.Alert)).ToContainTextAsync("Line 3, column 3: Property names must be in double quotes.");
+        await Expect(output).ToHaveCountAsync(0);
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Copy", Exact = true })).ToBeDisabledAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Go to line 3:3" }).ClickAsync();
+        await Expect(input).ToBeFocusedAsync();
+        Assert.Equal("x", await input.EvaluateAsync<string>("element => element.value[element.selectionStart]"));
+        Assert.Empty((await Page.RunAxe()).Violations);
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Clear", Exact = true }).ClickAsync();
+        await Expect(input).ToHaveValueAsync("");
+        await Expect(output).ToHaveValueAsync("");
+        await Expect(Page.GetByRole(AriaRole.Alert)).ToHaveCountAsync(0);
+    }
+
+    [Fact]
+    public async Task Json_toolkit_persists_only_formatting_settings_and_never_sends_the_json()
+    {
+        const string marker = "privacy-marker-7f3a";
+        var requests = new List<IRequest>();
+        Page.Request += (_, request) => requests.Add(request);
+        await Page.GotoAsync($"{site.BaseUrl}/tools/json-toolkit");
+        var input = Page.GetByLabel("Input", new() { Exact = true });
+        var output = Page.GetByLabel("Formatted JSON", new() { Exact = true });
+        await ExpectApplicationAsync(input);
+        await input.FillAsync($$"""{"secret":["{{marker}}"]}""");
+        await Expect(output).ToHaveValueAsync($"{{\n  \"secret\": [\n    \"{marker}\"\n  ]\n}}");
+
+        await Page.GetByLabel("Tabs", new() { Exact = true }).CheckAsync();
+        await Expect(Page.GetByLabel("Indent size")).ToHaveCountAsync(0);
+        await Expect(output).ToHaveValueAsync($"{{\n\t\"secret\": [\n\t\t\"{marker}\"\n\t]\n}}");
+        await Page.GetByLabel("Spaces", new() { Exact = true }).CheckAsync();
+        await Page.GetByLabel("Indent size").SelectOptionAsync("4");
+        await Expect(output).ToHaveValueAsync($"{{\n    \"secret\": [\n        \"{marker}\"\n    ]\n}}");
+        await Page.GetByLabel("Minified", new() { Exact = true }).CheckAsync();
+        await Expect(Page.GetByLabel("Tabs", new() { Exact = true })).ToHaveCountAsync(0);
+        await Expect(output).ToHaveValueAsync($$"""{"secret":["{{marker}}"]}""");
+
+        var storedKeys = await Page.EvaluateAsync<string[]>("Object.keys(localStorage)");
+        Assert.All(storedKeys, key => Assert.StartsWith("spelos.jsonFormatter.", key, StringComparison.Ordinal));
+        Assert.DoesNotContain(marker, await Page.EvaluateAsync<string>("JSON.stringify(Object.entries(localStorage))"), StringComparison.Ordinal);
+        Assert.Equal(0, await Page.EvaluateAsync<int>("sessionStorage.length"));
+
+        await Page.ReloadAsync();
+        await ExpectApplicationAsync(input);
+        await Expect(Page.GetByLabel("Minified", new() { Exact = true })).ToBeCheckedAsync();
+        await Expect(input).ToHaveValueAsync("");
+        await Page.GetByLabel("Indented", new() { Exact = true }).CheckAsync();
+        await Expect(Page.GetByLabel("Spaces", new() { Exact = true })).ToBeCheckedAsync();
+        await Expect(Page.GetByLabel("Indent size")).ToHaveValueAsync("4");
+        Assert.DoesNotContain(requests, request => request.Method != "GET" || request.Url.Contains(marker, StringComparison.Ordinal) || request.PostData is not null);
+    }
+
+    [Fact]
+    public async Task Json_toolkit_has_no_mobile_or_two_hundred_percent_overflow()
+    {
+        await Page.SetViewportSizeAsync(375, 667);
+        await Page.GotoAsync($"{site.BaseUrl}/tools/json-toolkit");
+        var input = Page.GetByLabel("Input", new() { Exact = true });
+        await ExpectApplicationAsync(input);
+        await input.FillAsync($$"""{"long":"{{new string('x', 300)}}"}""");
+        await Expect(Page.GetByLabel("Formatted JSON", new() { Exact = true })).ToHaveValueAsync(new Regex("long"));
+        await AssertNoHorizontalOverflowAsync();
+        await input.FillAsync($$"""{"long":"{{new string('x', 300)}}" x}""");
+        await Expect(Page.GetByRole(AriaRole.Alert)).ToBeVisibleAsync();
+        await AssertNoHorizontalOverflowAsync();
+        await Page.EvaluateAsync("document.documentElement.style.fontSize = '200%'");
+        await AssertNoHorizontalOverflowAsync();
+        Assert.Empty((await Page.RunAxe()).Violations);
+    }
+
     private async Task ExpectApplicationAsync(ILocator locator)
     {
         try

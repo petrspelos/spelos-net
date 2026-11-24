@@ -1,3 +1,4 @@
 https://spelos.net/
 https://spelos.net/tools
 https://spelos.net/tools/appsettings-converter
+https://spelos.net/tools/json-toolkit

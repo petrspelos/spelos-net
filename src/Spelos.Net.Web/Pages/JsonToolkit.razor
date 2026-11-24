@@ -1,0 +1,166 @@
+@page "/tools/json-toolkit"
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<PageTitle>JSON Toolkit | Spelos .NET</PageTitle>
+<main class="page-shell tool-page">
+    <article class="content-card tool-card converter json-toolkit">
+        <h1>JSON Toolkit</h1>
+        <p>Format JSON as you type: paste it into the input and copy clean, consistently indented JSON from the output. Only whitespace changes; values, key order and string escapes stay exactly as written.</p>
+        <p>Processing stays in browser memory. Your JSON is never uploaded, saved in browser storage, or added to URLs; only your formatting settings are remembered.</p>
+        <section class="tool-panel json-settings" aria-label="Formatting settings">
+            <fieldset>
+                <legend>Output format</legend>
+                <label class="note-choice"><input type="radio" name="json-output-format" checked="@(_options.Format == JsonOutputFormat.Indented)" @onchange="() => ApplySettingsAsync(_options with { Format = JsonOutputFormat.Indented })" />Indented</label>
+                <label class="note-choice"><input type="radio" name="json-output-format" checked="@(_options.Format == JsonOutputFormat.Minified)" @onchange="() => ApplySettingsAsync(_options with { Format = JsonOutputFormat.Minified })" />Minified</label>
+            </fieldset>
+            @if (_options.Format == JsonOutputFormat.Indented)
+            {
+                <fieldset>
+                    <legend>Indent style</legend>
+                    <label class="note-choice"><input type="radio" name="json-indent-style" checked="@(_options.IndentStyle == JsonIndentStyle.Spaces)" @onchange="() => ApplySettingsAsync(_options with { IndentStyle = JsonIndentStyle.Spaces })" />Spaces</label>
+                    <label class="note-choice"><input type="radio" name="json-indent-style" checked="@(_options.IndentStyle == JsonIndentStyle.Tabs)" @onchange="() => ApplySettingsAsync(_options with { IndentStyle = JsonIndentStyle.Tabs })" />Tabs</label>
+                </fieldset>
+                @if (_options.IndentStyle == JsonIndentStyle.Spaces)
+                {
+                    <div class="json-indent-size">
+                        <label for="json-indent-size">Indent size</label>
+                        <select id="json-indent-size" value="@_options.IndentSize" @onchange="ChangeIndentSize">
+                            @for (var size = JsonFormatOptions.MinIndentSize; size <= JsonFormatOptions.MaxIndentSize; size++)
+                            {
+                                <option value="@size">@size @(size == 1 ? "space" : "spaces")</option>
+                            }
+                        </select>
+                    </div>
+                }
+            }
+        </section>
+        <div class="json-panes">
+            <div class="tool-panel json-pane">
+                <h2 id="json-input-heading">Input</h2>
+                <textarea id="json-input" @ref="_inputElement" aria-labelledby="json-input-heading" aria-invalid="@(_result.Error is not null ? "true" : null)" aria-describedby="@(_result.Error is not null ? "json-error" : null)" rows="18" wrap="off" spellcheck="false" autocomplete="off" placeholder="Paste JSON here" @bind="_input" @bind:event="oninput" @bind:after="ScheduleFormat"></textarea>
+                <div class="quick-actions"><button type="button" @onclick="Clear" disabled="@(_input.Length == 0)">Clear</button></div>
+            </div>
+            <div class="tool-panel json-pane">
+                <h2 id="json-output-heading">Formatted JSON</h2>
+                @if (_result.Error is { } error)
+                {
+                    <div id="json-error" class="validation-error json-error" role="alert">
+                        <p>Line @error.Line, column @error.Column: @error.Message</p>
+                        <button type="button" class="text-button" @onclick="GoToError">Go to line @error.Line:@error.Column</button>
+                    </div>
+                }
+                else
+                {
+                    <textarea id="json-output" aria-labelledby="json-output-heading" rows="18" wrap="off" readonly spellcheck="false" placeholder="Formatted JSON appears here" value="@_result.Output"></textarea>
+                }
+                <div class="quick-actions"><button type="button" @onclick="Copy" disabled="@(_result.Output.Length == 0)">Copy</button></div>
+                <p class="status-message" role="status" aria-live="polite">@_status</p>
+            </div>
+        </div>
+        <section class="explanation" aria-labelledby="json-help">
+            <h2 id="json-help">How formatting works</h2>
+            <p>The output updates shortly after you stop typing. Non-empty objects and arrays put one item per line; empty ones stay as {} and []. Lines end with LF and there is no trailing newline.</p>
+            <p>Comments, trailing commas and a leading byte order mark are accepted and removed. Everything else must be strict JSON: single-quoted strings and unquoted property names are errors.</p>
+        </section>
+        <nav><a href="/tools">← All tools</a><a href="/">Home</a></nav>
+    </article>
+</main>
+
+@code {
+    private const string FormatKey = "spelos.jsonFormatter.format", IndentStyleKey = "spelos.jsonFormatter.indentStyle", IndentSizeKey = "spelos.jsonFormatter.indentSize";
+    private static readonly TimeSpan FormatDelay = TimeSpan.FromMilliseconds(150);
+    private JsonFormatOptions _options = new();
+    private JsonFormatResult _result = new("", null);
+    private string _input = "", _status = "";
+    private ElementReference _inputElement;
+    private IJSObjectReference? _module;
+    private CancellationTokenSource? _pendingFormat;
+    private bool _settingsChanged;
+    private int _revision;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        var module = await Module();
+        var format = Enum.TryParse<JsonOutputFormat>(await module.InvokeAsync<string?>("load", FormatKey), out var f) && Enum.IsDefined(f) ? f : JsonOutputFormat.Indented;
+        var style = Enum.TryParse<JsonIndentStyle>(await module.InvokeAsync<string?>("load", IndentStyleKey), out var s) && Enum.IsDefined(s) ? s : JsonIndentStyle.Spaces;
+        var size = int.TryParse(await module.InvokeAsync<string?>("load", IndentSizeKey), out var n) && n is >= JsonFormatOptions.MinIndentSize and <= JsonFormatOptions.MaxIndentSize ? n : JsonFormatOptions.DefaultIndentSize;
+        if (_settingsChanged) return; // The user chose settings while stored ones were loading; keep theirs.
+        _options = new(format, style, size);
+        FormatNow();
+        StateHasChanged();
+    }
+
+    private async Task ScheduleFormat()
+    {
+        _pendingFormat?.Cancel();
+        _pendingFormat?.Dispose();
+        _pendingFormat = new();
+        try { await Task.Delay(FormatDelay, _pendingFormat.Token); }
+        catch (TaskCanceledException) { return; }
+        FormatNow();
+    }
+
+    private void FormatNow()
+    {
+        _pendingFormat?.Cancel();
+        _revision++;
+        _result = JsonFormatter.Format(_input, _options);
+        _status = "";
+    }
+
+    // Applies new settings immediately and remembers them; the input itself is never stored.
+    private async Task ApplySettingsAsync(JsonFormatOptions options)
+    {
+        _settingsChanged = true;
+        _options = options;
+        FormatNow();
+        var module = await Module();
+        await module.InvokeVoidAsync("save", FormatKey, options.Format.ToString());
+        await module.InvokeVoidAsync("save", IndentStyleKey, options.IndentStyle.ToString());
+        await module.InvokeVoidAsync("save", IndentSizeKey, options.IndentSize.ToString());
+    }
+
+    private Task ChangeIndentSize(ChangeEventArgs args) =>
+        int.TryParse(args.Value?.ToString(), out var size) && size is >= JsonFormatOptions.MinIndentSize and <= JsonFormatOptions.MaxIndentSize ? ApplySettingsAsync(_options with { IndentSize = size }) : Task.CompletedTask;
+
+    private async Task Clear()
+    {
+        _input = "";
+        FormatNow();
+        await _inputElement.FocusAsync();
+    }
+
+    private async Task Copy()
+    {
+        if (_result.Output.Length == 0) return;
+        var output = _result.Output;
+        var revision = _revision;
+        try
+        {
+            var copied = await (await Module()).InvokeAsync<bool>("copy", output, "json-output");
+            if (revision != _revision) return;
+            _status = copied ? "Formatted JSON copied." : "Clipboard access failed. The output is selected; press Ctrl+C or Command+C to copy.";
+        }
+        catch (JSException) { if (revision == _revision) _status = "Clipboard access failed. Select the formatted JSON and copy it manually."; }
+    }
+
+    private async Task GoToError()
+    {
+        if (_result.Error is { } error) await (await Module()).InvokeVoidAsync("goTo", "json-input", error.Line, error.Column);
+    }
+
+    private async Task<IJSObjectReference> Module() => _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/jsonFormatter.js");
+
+    public async ValueTask DisposeAsync()
+    {
+        _pendingFormat?.Cancel();
+        _pendingFormat?.Dispose();
+        if (_module is not null)
+        {
+            try { await _module.DisposeAsync(); }
+            catch (JSDisconnectedException) { }
+        }
+    }
+}

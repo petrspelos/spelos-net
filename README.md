@@ -46,3 +46,9 @@ The output targets .NET 8+ applications: nested paths use `__` and array indices
 For Compose, attach the downloaded file to your service with `env_file: ./appsettings.env`. A project `.env` primarily provides interpolation and is not automatically passed to the application; .NET itself does not read `.env`. This export targets Compose syntax rather than universal dotenv compatibility.
 
 On Windows, execute the `.ps1` in PowerShell 7.5+ or paste it into your session. It overwrites matching User variables and updates its own Process scope, leaving unrelated variables untouched. A child shell cannot update its parent's environment, and existing applications do not automatically refresh. Empty strings are rejected for this format because persistent User assignments would delete the variable; Compose preserves them. Strings containing carriage returns use UTF-8 Base64 expressions to avoid PowerShell's source-line normalization.
+
+## JSON Toolkit
+
+Visit `/tools/json-toolkit` to format JSON in the browser. Paste JSON into the input and the read-only output updates shortly after you stop typing. Choose Indented (spaces or tabs, 1–8 spaces, default 2) or Minified output; only these settings are saved in local storage, and the JSON itself is never uploaded or stored.
+
+Formatting changes whitespace only: key order, duplicate keys, number literals and string escapes are copied exactly as written. Comments, trailing commas and a leading byte order mark are accepted and removed; any other non-strict syntax, such as single quotes or unquoted property names, produces a line-and-column error with a "go to" action instead of partial output.
